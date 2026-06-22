@@ -105,9 +105,9 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
   if (!choicesDone) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
-          <button onClick={onBack} className="text-gray-500 text-xl">←</button>
-          <h1 className="text-lg font-semibold text-gray-800">Boodschappenlijst</h1>
+        <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+          <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         </div>
         <WeekOverview weekPlan={weekPlan} />
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -186,7 +186,8 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
         <div className="p-4">
           <button
             onClick={() => setChoicesDone(true)}
-            className="w-full py-3 bg-green-500 text-white font-semibold rounded-xl active:bg-green-600"
+            className="w-full py-3 font-semibold rounded-xl active:opacity-80 text-white"
+            style={{ background: 'var(--c-forest)' }}
           >
             Doorgaan
           </button>
@@ -198,9 +199,9 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
   if (!generated) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
-          <button onClick={onBack} className="text-gray-500 text-xl">←</button>
-          <h1 className="text-lg font-semibold text-gray-800">Boodschappenlijst</h1>
+        <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+          <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         </div>
         <WeekOverview weekPlan={weekPlan} />
         <div className="flex-1 flex items-center justify-center p-8 text-center">
@@ -210,7 +211,8 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
             </p>
             <button
               onClick={handleGenerate}
-              className="px-6 py-3 bg-green-500 text-white font-semibold rounded-xl active:bg-green-600"
+              className="px-6 py-3 text-white font-semibold rounded-xl active:opacity-80"
+              style={{ background: 'var(--c-forest)' }}
             >
               Genereer boodschappenlijst
             </button>
@@ -222,14 +224,15 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
-        <button onClick={onBack} className="text-gray-500 text-xl">←</button>
-        <h1 className="text-lg font-semibold text-gray-800 flex-1">Boodschappenlijst</h1>
+      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+        <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+        <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         <button
           onClick={() => setSupermarktMode((m) => !m)}
-          className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
-            supermarktMode ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'
-          }`}
+          className="text-xs px-3 py-1.5 rounded-full font-medium transition-colors"
+          style={supermarktMode
+            ? { background: 'var(--c-forest)', color: 'var(--c-cream)' }
+            : { background: 'rgba(253,240,232,0.15)', color: 'var(--c-cream)' }}
         >
           {supermarktMode ? '✓ Supermarkt' : 'Supermarkt'}
         </button>
@@ -269,7 +272,8 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
               >
                 <button
                   onClick={() => toggleItem(item.id)}
-                  className="w-6 h-6 rounded-full bg-green-400 flex-shrink-0 flex items-center justify-center text-white text-xs active:scale-95 transition-transform"
+                  className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs active:scale-95 transition-transform"
+                  style={{ background: 'var(--c-forest)', color: 'var(--c-cream)' }}
                 >
                   ✓
                 </button>
@@ -293,14 +297,16 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
         <div className="border-t border-gray-100 bg-white flex-shrink-0">
           <form onSubmit={handleAddItem} className="p-4 pb-2 flex gap-2">
             <input
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+              className="flex-1 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2"
+              style={{ borderColor: 'var(--c-cream-dark)', '--tw-ring-color': 'var(--c-forest)' } as React.CSSProperties}
               placeholder="Item toevoegen..."
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded-xl font-medium active:bg-green-600"
+              className="px-4 py-2 text-white rounded-xl font-medium active:opacity-80"
+              style={{ background: 'var(--c-forest)' }}
             >
               +
             </button>
@@ -308,7 +314,8 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
           <div className="px-4 pb-4">
             <button
               onClick={() => setShowRecipePicker(true)}
-              className="w-full py-2.5 border border-green-300 text-green-600 text-sm font-medium rounded-xl active:bg-green-50 flex items-center justify-center gap-2"
+              className="w-full py-2.5 text-sm font-medium rounded-xl active:opacity-80 flex items-center justify-center gap-2"
+              style={{ border: '1px solid var(--c-forest)', color: 'var(--c-forest)' }}
             >
               <span>📖</span>
               <span>Recept toevoegen aan lijst</span>

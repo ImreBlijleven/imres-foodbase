@@ -33,8 +33,8 @@ export function WeekGrid({ weekPlan, onUpdateMeal, onAddActiviteit, onUpdateActi
           <div />
           {weekPlan.days.map((day, i) => (
             <div key={day.date} className="text-center">
-              <div className="text-xs font-bold text-gray-700">{DAY_NAMES[i]}</div>
-              <div className="text-xs text-gray-400">{formatDate(day.date)}</div>
+              <div className="text-xs font-medium" style={{ color: 'var(--c-espresso)' }}>{DAY_NAMES[i]}</div>
+              <div className="text-xs" style={{ color: 'var(--c-terracotta)', opacity: 0.7 }}>{formatDate(day.date)}</div>
             </div>
           ))}
         </div>
@@ -45,7 +45,7 @@ export function WeekGrid({ weekPlan, onUpdateMeal, onAddActiviteit, onUpdateActi
             return (
               <div key={row.key} className="grid grid-cols-[64px_repeat(7,1fr)] gap-1 mb-0.5">
                 <div className="flex items-center">
-                  <span className="text-xs text-gray-500 font-medium">{row.label}</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>{row.label}</span>
                 </div>
                 {weekPlan.days.map((day) => (
                   <MealCell

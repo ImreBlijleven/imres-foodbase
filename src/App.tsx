@@ -1,15 +1,30 @@
 import { useState } from 'react';
 import { useWeekPlan } from './hooks/useWeekPlan';
+import { HomeScreen } from './components/HomeScreen';
 import { WeekGrid } from './components/WeekGrid';
 import { ShoppingListScreen } from './components/ShoppingListScreen';
 import { RecipeLibraryScreen } from './components/RecipeLibraryScreen';
 import { getWeekStart, addWeeks, getWeekNumber } from './utils';
 
-type Screen = 'week' | 'shopping' | 'recipes';
+type Screen = 'home' | 'week' | 'shopping' | 'recipes';
+
+const BackArrow = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CartIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <path d="M4 5h12l-1.5 9a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 14L4 5z" stroke="currentColor" strokeWidth="1.4" />
+    <path d="M2.5 5h15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <path d="M8 5V3.5a2 2 0 014 0V5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+  </svg>
+);
 
 export default function App() {
   const [weekStart, setWeekStart] = useState(() => getWeekStart());
-  const [screen, setScreen] = useState<Screen>('week');
+  const [screen, setScreen] = useState<Screen>('home');
   const { weekPlan, updateMeal, addActiviteit, updateActiviteit, removeActiviteit } = useWeekPlan(weekStart);
   const weekNum = getWeekNumber(weekStart);
 
@@ -17,43 +32,79 @@ export default function App() {
   function nextWeek() { setWeekStart((w) => addWeeks(w, 1)); }
   function goToday() { setWeekStart(getWeekStart()); }
 
+  if (screen === 'home') {
+    return <HomeScreen onNavigate={(s) => setScreen(s)} />;
+  }
+
   if (screen === 'shopping') {
     return (
-      <div className="flex flex-col h-svh bg-gray-50">
-        <ShoppingListScreen weekPlan={weekPlan} onBack={() => setScreen('week')} />
+      <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
+        <ShoppingListScreen weekPlan={weekPlan} onBack={() => setScreen('home')} />
       </div>
     );
   }
 
   if (screen === 'recipes') {
     return (
-      <div className="flex flex-col h-svh bg-gray-50">
-        <RecipeLibraryScreen onBack={() => setScreen('week')} />
+      <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
+        <RecipeLibraryScreen onBack={() => setScreen('home')} />
       </div>
     );
   }
 
-
   return (
-    <div className="flex flex-col h-svh bg-gray-50">
+    <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 flex-shrink-0">
+      <div
+        className="px-4 py-3 flex items-center gap-3 flex-shrink-0"
+        style={{ background: 'var(--c-espresso)' }}
+      >
+        <button
+          onClick={() => setScreen('home')}
+          className="flex items-center justify-center rounded-full active:opacity-70 transition-opacity"
+          style={{ color: 'var(--c-cream)', width: 32, height: 32 }}
+          aria-label="Terug naar home"
+        >
+          <BackArrow />
+        </button>
+
         <button
           onClick={prevWeek}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 text-xl rounded-full active:bg-gray-100"
+          className="flex items-center justify-center rounded-full active:opacity-70 transition-opacity"
+          style={{ color: 'var(--c-cream)', width: 28, height: 28 }}
         >
-          ‹
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
+
         <div className="flex-1 text-center">
-          <button onClick={goToday} className="text-base font-semibold text-gray-800">
+          <button
+            onClick={goToday}
+            className="font-serif-display text-lg active:opacity-70"
+            style={{ color: 'var(--c-cream)' }}
+          >
             Week {weekNum}
           </button>
         </div>
+
         <button
           onClick={nextWeek}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 text-xl rounded-full active:bg-gray-100"
+          className="flex items-center justify-center rounded-full active:opacity-70 transition-opacity"
+          style={{ color: 'var(--c-cream)', width: 28, height: 28 }}
         >
-          ›
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        <button
+          onClick={() => setScreen('shopping')}
+          className="flex items-center justify-center rounded-full active:opacity-70 transition-opacity"
+          style={{ color: 'var(--c-cream)', width: 32, height: 32 }}
+          aria-label="Boodschappenlijst"
+        >
+          <CartIcon />
         </button>
       </div>
 
@@ -66,24 +117,6 @@ export default function App() {
           onUpdateActiviteit={updateActiviteit}
           onRemoveActiviteit={removeActiviteit}
         />
-      </div>
-
-      {/* Bottom bar */}
-      <div className="p-4 flex gap-3 justify-end flex-shrink-0">
-        <button
-          onClick={() => setScreen('recipes')}
-          className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-3 rounded-full shadow-sm font-semibold active:bg-gray-50 active:scale-95 transition-all"
-        >
-          <span>📖</span>
-          <span>Recepten</span>
-        </button>
-        <button
-          onClick={() => setScreen('shopping')}
-          className="flex items-center gap-2 bg-green-500 text-white px-5 py-3 rounded-full shadow-lg font-semibold active:bg-green-600 active:scale-95 transition-all"
-        >
-          <span>🛒</span>
-          <span>Boodschappen</span>
-        </button>
       </div>
     </div>
   );

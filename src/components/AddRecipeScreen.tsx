@@ -119,22 +119,21 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white flex-shrink-0">
-        <button onClick={onBack} className="text-gray-500 text-xl">←</button>
-        <h1 className="text-lg font-semibold text-gray-800">Recept toevoegen</h1>
+      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+        <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+        <h1 className="font-serif-display text-lg" style={{ color: 'var(--c-cream)' }}>Recept toevoegen</h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-100 bg-white flex-shrink-0">
+      <div className="flex flex-shrink-0" style={{ background: 'var(--c-espresso)', borderBottom: '1px solid rgba(253,240,232,0.12)' }}>
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => { setTab(t.key); setError(''); setInstagramFallback(false); }}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 ${
-              tab === t.key
-                ? 'border-green-500 text-green-600'
-                : 'border-transparent text-gray-400 active:text-gray-600'
-            }`}
+            className="flex-1 py-2.5 text-sm font-medium transition-colors border-b-2"
+            style={tab === t.key
+              ? { borderColor: 'var(--c-terracotta)', color: 'var(--c-cream)' }
+              : { borderColor: 'transparent', color: 'rgba(253,240,232,0.45)' }}
           >
             {t.label}
           </button>
@@ -145,10 +144,11 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
         {/* Import controls */}
         {tab === 'website' && (
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Website URL</label>
+            <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Website URL</label>
             <div className="flex gap-2">
               <input
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+                className="flex-1 border rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                style={{ borderColor: 'var(--c-cream-dark)' }}
                 placeholder="https://..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -157,7 +157,8 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
               <button
                 onClick={handleWebsiteImport}
                 disabled={loading || !url.trim()}
-                className="px-4 py-2.5 bg-green-500 text-white rounded-xl text-sm font-medium active:bg-green-600 disabled:opacity-40"
+                className="px-4 py-2.5 text-white rounded-xl text-sm font-medium active:opacity-80 disabled:opacity-40"
+                style={{ background: 'var(--c-forest)' }}
               >
                 {loading ? '…' : 'Haal op'}
               </button>
@@ -167,10 +168,11 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
 
         {tab === 'instagram' && !instagramFallback && (
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Instagram link</label>
+            <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Instagram link</label>
             <div className="flex gap-2">
               <input
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+                className="flex-1 border rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                style={{ borderColor: 'var(--c-cream-dark)' }}
                 placeholder="https://instagram.com/p/..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -179,7 +181,8 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
               <button
                 onClick={handleInstagramImport}
                 disabled={loading || !url.trim()}
-                className="px-4 py-2.5 bg-green-500 text-white rounded-xl text-sm font-medium active:bg-green-600 disabled:opacity-40"
+                className="px-4 py-2.5 text-white rounded-xl text-sm font-medium active:opacity-80 disabled:opacity-40"
+                style={{ background: 'var(--c-forest)' }}
               >
                 {loading ? '…' : 'Haal op'}
               </button>
@@ -191,7 +194,8 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
           <div className="space-y-2">
             <p className="text-sm text-gray-500">Instagram blokkeert automatisch ophalen. Plak de caption hier:</p>
             <textarea
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-300"
+              className="w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none"
+              style={{ borderColor: 'var(--c-cream-dark)' }}
               rows={5}
               placeholder="Plak hier de tekst van het Instagram-bericht..."
               value={captionText}
@@ -200,7 +204,8 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
             <button
               onClick={handleCaptionExtract}
               disabled={loading || !captionText.trim()}
-              className="w-full py-2.5 bg-green-500 text-white rounded-xl text-sm font-medium active:bg-green-600 disabled:opacity-40"
+              className="w-full py-2.5 text-white rounded-xl text-sm font-medium active:opacity-80 disabled:opacity-40"
+              style={{ background: 'var(--c-forest)' }}
             >
               {loading ? 'Verwerken…' : 'Extraheer ingrediënten'}
             </button>
@@ -213,7 +218,8 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={loading}
-              className="w-full py-10 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm active:bg-gray-50 disabled:opacity-40 flex flex-col items-center gap-2"
+              className="w-full py-10 border-2 border-dashed rounded-xl text-sm active:opacity-80 disabled:opacity-40 flex flex-col items-center gap-2"
+              style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-terracotta)', opacity: 0.7 }}
             >
               <span className="text-3xl">📷</span>
               <span>{loading ? 'Verwerken…' : 'Tik om foto te kiezen'}</span>
@@ -256,9 +262,10 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
 
         {/* Naam */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Naam</label>
+          <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Naam</label>
           <input
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+            style={{ borderColor: 'var(--c-cream-dark)' }}
             placeholder="Pasta arrabiata"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -267,9 +274,10 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
 
         {/* Link */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Link (optioneel)</label>
+          <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Link (optioneel)</label>
           <input
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+            style={{ borderColor: 'var(--c-cream-dark)' }}
             placeholder="https://..."
             type="url"
             value={link}
@@ -279,7 +287,7 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
 
         {/* Ingrediënten */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>
             Ingrediënten {ingredients.length > 0 && `(${ingredients.length})`}
           </label>
           <IngredientEditor ingredients={ingredients} onChange={setIngredients} />
@@ -287,11 +295,12 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
       </div>
 
       {/* Save */}
-      <div className="p-4 border-t border-gray-100 bg-white flex-shrink-0">
+      <div className="p-4 flex-shrink-0 bg-white" style={{ borderTop: '1px solid var(--c-cream-dark)' }}>
         <button
           onClick={handleSave}
           disabled={!name.trim()}
-          className="w-full py-3 bg-green-500 text-white font-semibold rounded-xl active:bg-green-600 disabled:opacity-40"
+          className="w-full py-3 text-white font-semibold rounded-xl active:opacity-80 disabled:opacity-40"
+          style={{ background: 'var(--c-forest)' }}
         >
           Recept opslaan
         </button>

@@ -49,7 +49,7 @@ function makePNG(size, r, g, b) {
   ]);
 }
 
-// #5DCAA5 = rgb(93, 202, 165)
-writeFileSync('public/icon-192.png', makePNG(192, 93, 202, 165));
-writeFileSync('public/icon-512.png', makePNG(512, 93, 202, 165));
+// #2D4A3E = rgb(45, 74, 62)
+writeFileSync('public/icon-192.png', makePNG(192, 45, 74, 62));
+writeFileSync('public/icon-512.png', makePNG(512, 45, 74, 62));
 console.log('✓ Icons gegenereerd: icon-192.png en icon-512.png');

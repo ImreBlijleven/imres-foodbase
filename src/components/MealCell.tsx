@@ -14,7 +14,7 @@ export function MealCell({ meal, onUpdate }: Props) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(meal?.label ?? '');
 
-  const bgColor = meal ? MEAL_TYPE_CONFIG[meal.type].color : '#e5e7eb';
+  const bgColor = meal ? MEAL_TYPE_CONFIG[meal.type].color : 'var(--c-cream-dark)';
 
   function handleTap() {
     if (!meal) {
@@ -91,7 +91,7 @@ export function MealCell({ meal, onUpdate }: Props) {
             {meal.label || MEAL_TYPE_CONFIG[meal.type].label}
           </span>
         ) : (
-          <span className="text-gray-400 text-lg leading-none">+</span>
+          <span className="text-lg leading-none" style={{ color: 'var(--c-terracotta)', opacity: 0.4 }}>+</span>
         )}
       </div>
 

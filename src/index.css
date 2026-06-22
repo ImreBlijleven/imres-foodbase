@@ -1,16 +1,29 @@
 @import "tailwindcss";
 
+:root {
+  --c-espresso: #1E0E07;
+  --c-forest: #2D4A3E;
+  --c-forest-light: #3d6454;
+  --c-terracotta: #9F5E45;
+  --c-cream: #FDF0E8;
+  --c-cream-dark: #F0DDD0;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f8f8f8;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background: var(--c-cream);
   -webkit-font-smoothing: antialiased;
 }
 
 #root {
   min-height: 100svh;
+}
+
+.font-serif-display {
+  font-family: 'DM Serif Display', Georgia, serif;
 }
