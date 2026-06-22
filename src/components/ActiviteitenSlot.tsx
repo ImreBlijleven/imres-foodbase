@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ActivityItem, ActivityPosition } from '../types';
+import { useKeyboardBottom } from '../hooks/useKeyboardBottom';
 
 interface Props {
   items: ActivityItem[];
@@ -18,6 +19,7 @@ interface SheetState {
 export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove }: Props) {
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const keyboardBottom = useKeyboardBottom(sheet !== null);
 
   useEffect(() => {
     if (sheet) setTimeout(() => textareaRef.current?.focus(), 50);
@@ -67,9 +69,10 @@ export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove }: Props) {
       </div>
 
       {sheet && (
-        <div className="fixed inset-0 z-50 flex items-end" onClick={() => setSheet(null)}>
+        <div className="fixed inset-0 z-50" onClick={() => setSheet(null)}>
           <div
-            className="w-full bg-white rounded-t-2xl p-4 pb-8 shadow-2xl"
+            className="absolute left-0 right-0 bg-white rounded-t-2xl p-4 pb-8 shadow-2xl"
+            style={{ bottom: keyboardBottom }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />

@@ -98,8 +98,8 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
     if (!file) return;
     setLoading(true); setError('');
     try {
-      const base64 = await fileToBase64(file);
-      const ings = await extractFromImage(base64, file.type);
+      const base64 = await resizeAndCompress(file);
+      const ings = await extractFromImage(base64, 'image/jpeg');
       if (!name) setName(file.name.replace(/\.[^.]+$/, ''));
       setIngredients(ings);
     } catch (e: unknown) {
@@ -228,7 +228,6 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
               ref={fileRef}
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={handleFileChange}
             />
@@ -309,14 +308,24 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
   );
 }
 
-function fileToBase64(file: File): Promise<string> {
+// Resize to max 1024px and compress to JPEG to stay well under Vercel's 4.5MB limit
+function resizeAndCompress(file: File, maxPx = 1024, quality = 0.75): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(',')[1]);
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve(dataUrl.split(',')[1]);
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Afbeelding laden mislukt')); };
+    img.src = url;
   });
 }
