@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { Meal, MealType } from '../types';
 import { MEAL_TYPE_CONFIG } from '../types';
@@ -55,14 +55,12 @@ export function MealCell({ meal, onUpdate }: Props) {
     onUpdate({ ...meal, label: label.trim() });
   }
 
-  let pressTimer: ReturnType<typeof setTimeout>;
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   function onPointerDown() {
-    pressTimer = setTimeout(() => {
-      handleLongPress();
-    }, 500);
+    pressTimer.current = setTimeout(handleLongPress, 500);
   }
   function onPointerUp() {
-    clearTimeout(pressTimer);
+    if (pressTimer.current !== null) clearTimeout(pressTimer.current);
   }
 
   return (

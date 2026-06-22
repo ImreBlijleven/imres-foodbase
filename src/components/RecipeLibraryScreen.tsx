@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Recipe } from '../types';
 import { useRecipes } from '../hooks/useRecipes';
 import { AddRecipeScreen } from './AddRecipeScreen';
@@ -15,7 +16,7 @@ interface Props {
 
 type View = 'list' | 'add' | 'detail';
 
-const Header = ({ onBack, title, right }: { onBack: () => void; title: string; right?: React.ReactNode }) => (
+const Header = ({ onBack, title, right }: { onBack: () => void; title: string; right?: ReactNode }) => (
   <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
     <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
     <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>{title}</h1>

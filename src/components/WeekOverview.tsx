@@ -73,13 +73,11 @@ export function WeekOverview({ weekPlan }: Props) {
               </div>
               {weekPlan.days.map((day) => (
                 <div key={day.date} className="min-h-[24px] rounded bg-gray-50 px-1 py-0.5">
-                  {day.activiteiten.length > 0 ? (
-                    day.activiteiten.map((a) => (
-                      <p key={a.id} className="text-[9px] text-gray-500 leading-snug truncate">
-                        {a.text}
-                      </p>
-                    ))
-                  ) : null}
+                  {day.activiteiten.map((a) => (
+                    <p key={a.id} className="text-[9px] text-gray-500 leading-snug truncate">
+                      {a.text}
+                    </p>
+                  ))}
                 </div>
               ))}
             </div>

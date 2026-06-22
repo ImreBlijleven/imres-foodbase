@@ -16,7 +16,7 @@ interface SheetState {
   text: string;
 }
 
-export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove }: Props) {
+export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove, position: _position }: Props) {
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const keyboardBottom = useKeyboardBottom(sheet !== null);

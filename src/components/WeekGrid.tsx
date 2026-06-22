@@ -13,15 +13,15 @@ interface Props {
 
 const ROWS: Array<
   | { kind: 'meal'; key: 'ontbijt' | 'lunch' | 'diner'; label: string }
-  | { kind: 'activity'; position: ActivityPosition; label: string }
+  | { kind: 'activity'; position: ActivityPosition }
 > = [
-  { kind: 'activity', position: 'voor_ontbijt', label: '' },
+  { kind: 'activity', position: 'voor_ontbijt' },
   { kind: 'meal', key: 'ontbijt', label: 'Ontbijt' },
-  { kind: 'activity', position: 'na_ontbijt', label: '' },
+  { kind: 'activity', position: 'na_ontbijt' },
   { kind: 'meal', key: 'lunch', label: 'Lunch' },
-  { kind: 'activity', position: 'na_lunch', label: '' },
+  { kind: 'activity', position: 'na_lunch' },
   { kind: 'meal', key: 'diner', label: 'Diner' },
-  { kind: 'activity', position: 'na_diner', label: '' },
+  { kind: 'activity', position: 'na_diner' },
 ];
 
 export function WeekGrid({ weekPlan, onUpdateMeal, onAddActiviteit, onUpdateActiviteit, onRemoveActiviteit }: Props) {
@@ -58,14 +58,10 @@ export function WeekGrid({ weekPlan, onUpdateMeal, onAddActiviteit, onUpdateActi
             );
           }
 
-          // Activity row — only render if any day has items or show slim add-row
+          // Activity row
           return (
             <div key={row.position} className="grid grid-cols-[64px_repeat(7,1fr)] gap-1 mb-0.5">
-              <div className="flex items-center">
-                <span className="text-[10px] text-gray-300 font-medium leading-none">
-                  {row.label}
-                </span>
-              </div>
+              <div />
               {weekPlan.days.map((day) => {
                 const items = day.activiteiten.filter((a) => a.position === row.position);
                 return (
