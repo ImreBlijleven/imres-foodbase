@@ -51,6 +51,7 @@ function MealCountSummary({ counts }: { counts: { slot: 'ontbijt' | 'lunch' | 'd
 
 interface Props {
   weekPlan: WeekPlan;
+  userId: string;
   onBack: () => void;
 }
 
@@ -68,9 +69,9 @@ function collectMealsNeedingChoice(weekPlan: WeekPlan) {
   return meals;
 }
 
-export function ShoppingListScreen({ weekPlan, onBack }: Props) {
+export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   const { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems } =
-    useShoppingList(weekPlan.id);
+    useShoppingList(weekPlan.id, userId);
 
   const [generated, setGenerated] = useState(false);
   const [supermarktMode, setSupermarktMode] = useState(false);
@@ -329,6 +330,7 @@ export function ShoppingListScreen({ weekPlan, onBack }: Props) {
         <div className="fixed inset-0 z-40 bg-white flex flex-col">
           <RecipeLibraryScreen
             selectMode
+            userId={userId}
             onSelectRecipe={(recipe) => {
               setPickedRecipe(recipe);
               setShowRecipePicker(false);

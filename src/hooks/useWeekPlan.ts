@@ -1,97 +1,107 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { WeekPlan, Meal, ActivityItem } from '../types';
-import { createEmptyWeekPlan } from '../utils';
-import { generateId } from '../utils';
+import { createEmptyWeekPlan, generateId } from '../utils';
+import { supabase } from '../lib/supabase';
 
-const STORAGE_KEY = 'meal-planner-weeks';
-
-function loadAllWeeks(): Record<string, WeekPlan> {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    // Migreer oude string-activiteiten naar nieuwe array-vorm
-    for (const plan of Object.values(raw) as WeekPlan[]) {
-      for (const day of plan.days) {
-        if (typeof (day.activiteiten as unknown) === 'string') {
-          const old = day.activiteiten as unknown as string;
-          day.activiteiten = old
-            ? [{ id: generateId(), text: old, position: 'na_diner' }]
-            : [];
-        }
-      }
-    }
-    return raw;
-  } catch {
-    return {};
-  }
+async function fetchWeekPlan(weekId: string, userId: string): Promise<WeekPlan | null> {
+  const { data } = await supabase
+    .from('week_plans')
+    .select('data')
+    .eq('week_id', weekId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  return data ? (data.data as WeekPlan) : null;
 }
 
-function saveAllWeeks(weeks: Record<string, WeekPlan>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(weeks));
+async function saveWeekPlan(weekId: string, userId: string, plan: WeekPlan) {
+  await supabase.from('week_plans').upsert({
+    week_id: weekId,
+    user_id: userId,
+    data: plan,
+    updated_at: new Date().toISOString(),
+  });
 }
 
-export function useWeekPlan(weekStart: string) {
-  const [, forceUpdate] = useState(0);
+export function useWeekPlan(weekStart: string, userId: string) {
+  const [weekPlan, setWeekPlan] = useState<WeekPlan>(() => createEmptyWeekPlan(weekStart));
+  const [loading, setLoading] = useState(true);
 
-  const getWeekPlan = useCallback((): WeekPlan => {
-    const all = loadAllWeeks();
-    if (all[weekStart]) return all[weekStart];
-    return createEmptyWeekPlan(weekStart);
-  }, [weekStart]);
+  useEffect(() => {
+    setLoading(true);
+    setWeekPlan(createEmptyWeekPlan(weekStart));
+    fetchWeekPlan(weekStart, userId).then((plan) => {
+      setWeekPlan(plan ?? createEmptyWeekPlan(weekStart));
+      setLoading(false);
+    });
+  }, [weekStart, userId]);
+
+  const mutate = useCallback(
+    (updater: (plan: WeekPlan) => WeekPlan) => {
+      setWeekPlan((current) => {
+        const updated = updater(current);
+        saveWeekPlan(weekStart, userId, updated);
+        return updated;
+      });
+    },
+    [weekStart, userId]
+  );
 
   const updateMeal = useCallback(
     (date: string, slot: 'ontbijt' | 'lunch' | 'diner', meal: Meal | null) => {
-      const all = loadAllWeeks();
-      const plan = all[weekStart] ?? createEmptyWeekPlan(weekStart);
-      const day = plan.days.find((d) => d.date === date);
-      if (day) day[slot] = meal;
-      all[weekStart] = plan;
-      saveAllWeeks(all);
-      forceUpdate((n) => n + 1);
+      mutate((plan) => ({
+        ...plan,
+        days: plan.days.map((d) => (d.date === date ? { ...d, [slot]: meal } : d)),
+      }));
     },
-    [weekStart]
+    [mutate]
   );
 
   const addActiviteit = useCallback(
     (date: string, item: Omit<ActivityItem, 'id'>) => {
-      const all = loadAllWeeks();
-      const plan = all[weekStart] ?? createEmptyWeekPlan(weekStart);
-      const day = plan.days.find((d) => d.date === date);
-      if (day) day.activiteiten = [...day.activiteiten, { ...item, id: generateId() }];
-      all[weekStart] = plan;
-      saveAllWeeks(all);
-      forceUpdate((n) => n + 1);
+      mutate((plan) => ({
+        ...plan,
+        days: plan.days.map((d) =>
+          d.date === date
+            ? { ...d, activiteiten: [...d.activiteiten, { ...item, id: generateId() }] }
+            : d
+        ),
+      }));
     },
-    [weekStart]
+    [mutate]
   );
 
   const updateActiviteit = useCallback(
     (date: string, id: string, text: string) => {
-      const all = loadAllWeeks();
-      const plan = all[weekStart] ?? createEmptyWeekPlan(weekStart);
-      const day = plan.days.find((d) => d.date === date);
-      if (day) {
-        const item = day.activiteiten.find((a) => a.id === id);
-        if (item) item.text = text;
-      }
-      all[weekStart] = plan;
-      saveAllWeeks(all);
-      forceUpdate((n) => n + 1);
+      mutate((plan) => ({
+        ...plan,
+        days: plan.days.map((d) =>
+          d.date === date
+            ? {
+                ...d,
+                activiteiten: d.activiteiten.map((a) =>
+                  a.id === id ? { ...a, text } : a
+                ),
+              }
+            : d
+        ),
+      }));
     },
-    [weekStart]
+    [mutate]
   );
 
   const removeActiviteit = useCallback(
     (date: string, id: string) => {
-      const all = loadAllWeeks();
-      const plan = all[weekStart] ?? createEmptyWeekPlan(weekStart);
-      const day = plan.days.find((d) => d.date === date);
-      if (day) day.activiteiten = day.activiteiten.filter((a) => a.id !== id);
-      all[weekStart] = plan;
-      saveAllWeeks(all);
-      forceUpdate((n) => n + 1);
+      mutate((plan) => ({
+        ...plan,
+        days: plan.days.map((d) =>
+          d.date === date
+            ? { ...d, activiteiten: d.activiteiten.filter((a) => a.id !== id) }
+            : d
+        ),
+      }));
     },
-    [weekStart]
+    [mutate]
   );
 
-  return { weekPlan: getWeekPlan(), updateMeal, addActiviteit, updateActiviteit, removeActiviteit };
+  return { weekPlan, loading, updateMeal, addActiviteit, updateActiviteit, removeActiviteit };
 }

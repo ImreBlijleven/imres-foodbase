@@ -1,46 +1,71 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Recipe } from '../types';
 import { generateId } from '../utils';
+import { supabase } from '../lib/supabase';
 
-const STORAGE_KEY = 'foodbase-recipes';
-
-function loadRecipes(): Recipe[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveRecipes(recipes: Recipe[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
-}
-
-export function useRecipes() {
+export function useRecipes(userId: string) {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [, forceUpdate] = useState(0);
 
-  const getRecipes = useCallback((): Recipe[] => loadRecipes(), []);
+  useEffect(() => {
+    supabase
+      .from('recipes')
+      .select('data')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => {
+        if (data) setRecipes(data.map((r) => r.data as Recipe));
+      });
+  }, [userId]);
 
-  const addRecipe = useCallback((data: Omit<Recipe, 'id' | 'createdAt'>): Recipe => {
-    const recipes = loadRecipes();
-    const recipe: Recipe = { ...data, id: generateId(), createdAt: new Date().toISOString() };
-    saveRecipes([recipe, ...recipes]);
-    return recipe;
-  }, []);
+  const addRecipe = useCallback(
+    (recipeData: Omit<Recipe, 'id' | 'createdAt'>): Recipe => {
+      const recipe: Recipe = { ...recipeData, id: generateId(), createdAt: new Date().toISOString() };
+      setRecipes((prev) => [recipe, ...prev]);
+      supabase.from('recipes').insert({
+        id: recipe.id,
+        user_id: userId,
+        data: recipe,
+        updated_at: new Date().toISOString(),
+      }).then();
+      return recipe;
+    },
+    [userId]
+  );
 
-  const updateRecipe = useCallback((id: string, data: Partial<Omit<Recipe, 'id' | 'createdAt'>>) => {
-    const recipes = loadRecipes();
-    const idx = recipes.findIndex((r) => r.id === id);
-    if (idx >= 0) {
-      recipes[idx] = { ...recipes[idx], ...data };
-      saveRecipes(recipes);
-    }
-  }, []);
+  const updateRecipe = useCallback(
+    (id: string, data: Partial<Omit<Recipe, 'id' | 'createdAt'>>) => {
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, ...data } : r))
+      );
+      supabase
+        .from('recipes')
+        .select('data')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .single()
+        .then(({ data: row }) => {
+          if (row) {
+            const updated = { ...(row.data as Recipe), ...data };
+            supabase.from('recipes').upsert({
+              id,
+              user_id: userId,
+              data: updated,
+              updated_at: new Date().toISOString(),
+            }).then();
+          }
+        });
+    },
+    [userId]
+  );
 
-  const deleteRecipe = useCallback((id: string) => {
-    saveRecipes(loadRecipes().filter((r) => r.id !== id));
-    forceUpdate((n) => n + 1);
-  }, []);
+  const deleteRecipe = useCallback(
+    (id: string) => {
+      setRecipes((prev) => prev.filter((r) => r.id !== id));
+      supabase.from('recipes').delete().eq('id', id).eq('user_id', userId).then();
+    },
+    [userId]
+  );
 
-  return { recipes: getRecipes(), addRecipe, updateRecipe, deleteRecipe, forceUpdate };
+  return { recipes, addRecipe, updateRecipe, deleteRecipe, forceUpdate };
 }

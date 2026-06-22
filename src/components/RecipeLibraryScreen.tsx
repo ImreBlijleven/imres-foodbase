@@ -5,6 +5,7 @@ import { AddRecipeScreen } from './AddRecipeScreen';
 
 interface Props {
   onBack: () => void;
+  userId: string;
   onSelectRecipe?: (recipe: Recipe) => void;
   selectMode?: boolean;
 }
@@ -19,8 +20,8 @@ const Header = ({ onBack, title, right }: { onBack: () => void; title: string; r
   </div>
 );
 
-export function RecipeLibraryScreen({ onBack, onSelectRecipe, selectMode }: Props) {
-  const { recipes, addRecipe, updateRecipe, deleteRecipe, forceUpdate } = useRecipes();
+export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode }: Props) {
+  const { recipes, addRecipe, updateRecipe, deleteRecipe, forceUpdate } = useRecipes(userId);
   const [view, setView] = useState<View>('list');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Recipe | null>(null);

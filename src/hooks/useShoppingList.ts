@@ -1,29 +1,47 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { ShoppingList, ShoppingItem, WeekPlan } from '../types';
 import { MEAL_TYPE_CONFIG } from '../types';
 import { generateId } from '../utils';
+import { supabase } from '../lib/supabase';
 
-const STORAGE_KEY = 'meal-planner-shopping';
-
-function loadAllLists(): Record<string, ShoppingList> {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  } catch {
-    return {};
-  }
+async function fetchList(weekId: string, userId: string): Promise<ShoppingList | null> {
+  const { data } = await supabase
+    .from('shopping_lists')
+    .select('data')
+    .eq('week_id', weekId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  return data ? (data.data as ShoppingList) : null;
 }
 
-function saveLists(lists: Record<string, ShoppingList>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
+async function saveList(weekId: string, userId: string, list: ShoppingList) {
+  await supabase.from('shopping_lists').upsert({
+    week_id: weekId,
+    user_id: userId,
+    data: list,
+    updated_at: new Date().toISOString(),
+  });
 }
 
-export function useShoppingList(weekPlanId: string) {
-  const [, forceUpdate] = useState(0);
+export function useShoppingList(weekPlanId: string, userId: string) {
+  const [shoppingList, setShoppingList] = useState<ShoppingList>({ weekPlanId, items: [] });
 
-  const getList = useCallback((): ShoppingList => {
-    const all = loadAllLists();
-    return all[weekPlanId] ?? { weekPlanId, items: [] };
-  }, [weekPlanId]);
+  useEffect(() => {
+    fetchList(weekPlanId, userId).then((list) => {
+      setShoppingList(list ?? { weekPlanId, items: [] });
+    });
+  }, [weekPlanId, userId]);
+
+  const mutate = useCallback(
+    (updater: (list: ShoppingList) => ShoppingList) => {
+      setShoppingList((current) => {
+        const updated = updater(current);
+        saveList(weekPlanId, userId, updated);
+        return updated;
+      });
+    },
+    [weekPlanId, userId]
+  );
 
   const generateFromWeekPlan = useCallback(
     (weekPlan: WeekPlan, samenChoices: Record<string, number>, customChoices: Record<string, boolean>) => {
@@ -36,11 +54,9 @@ export function useShoppingList(weekPlanId: string) {
 
           const config = MEAL_TYPE_CONFIG[meal.type];
           let portions = config.defaultInclude ? 1 : 0;
-
           if (meal.type === 'eline') portions = 2;
           if (meal.type === 'samen') portions = samenChoices[meal.id] ?? 0;
           if (meal.type === 'custom') portions = (customChoices[meal.id] ?? false) ? 1 : 0;
-
           if (portions === 0) continue;
 
           for (const ing of meal.ingredients) {
@@ -56,73 +72,51 @@ export function useShoppingList(weekPlanId: string) {
         }
       }
 
-      const all = loadAllLists();
-      const existing = all[weekPlanId];
-      const manualItems = existing?.items.filter((i) => i.source === 'manual') ?? [];
-      all[weekPlanId] = { weekPlanId, items: [...items, ...manualItems] };
-      saveLists(all);
-      forceUpdate((n) => n + 1);
+      mutate((current) => {
+        const manualItems = current.items.filter((i) => i.source === 'manual');
+        return { weekPlanId, items: [...items, ...manualItems] };
+      });
     },
-    [weekPlanId]
+    [weekPlanId, mutate]
   );
 
   const toggleItem = useCallback(
     (itemId: string) => {
-      const all = loadAllLists();
-      const list = all[weekPlanId];
-      if (!list) return;
-      const item = list.items.find((i) => i.id === itemId);
-      if (item) item.checked = !item.checked;
-      saveLists(all);
-      forceUpdate((n) => n + 1);
+      mutate((list) => ({
+        ...list,
+        items: list.items.map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i)),
+      }));
     },
-    [weekPlanId]
+    [mutate]
   );
 
   const addManualItem = useCallback(
     (name: string) => {
-      const all = loadAllLists();
-      const list = all[weekPlanId] ?? { weekPlanId, items: [] };
-      list.items.push({
-        id: generateId(),
-        name,
-        amount: null,
-        unit: null,
-        checked: false,
-        source: 'manual',
-      });
-      all[weekPlanId] = list;
-      saveLists(all);
-      forceUpdate((n) => n + 1);
+      const item: ShoppingItem = { id: generateId(), name, amount: null, unit: null, checked: false, source: 'manual' };
+      mutate((list) => ({ ...list, items: [...list.items, item] }));
     },
-    [weekPlanId]
+    [mutate]
   );
 
   const removeItem = useCallback(
     (itemId: string) => {
-      const all = loadAllLists();
-      const list = all[weekPlanId];
-      if (!list) return;
-      list.items = list.items.filter((i) => i.id !== itemId);
-      saveLists(all);
-      forceUpdate((n) => n + 1);
+      mutate((list) => ({ ...list, items: list.items.filter((i) => i.id !== itemId) }));
     },
-    [weekPlanId]
+    [mutate]
   );
 
   const addRecipeItems = useCallback(
     (items: Omit<ShoppingItem, 'id' | 'checked' | 'source'>[]) => {
-      const all = loadAllLists();
-      const list = all[weekPlanId] ?? { weekPlanId, items: [] };
-      for (const item of items) {
-        list.items.push({ ...item, id: generateId(), checked: false, source: 'manual' });
-      }
-      all[weekPlanId] = list;
-      saveLists(all);
-      forceUpdate((n) => n + 1);
+      mutate((list) => ({
+        ...list,
+        items: [
+          ...list.items,
+          ...items.map((item) => ({ ...item, id: generateId(), checked: false, source: 'manual' as const })),
+        ],
+      }));
     },
-    [weekPlanId]
+    [mutate]
   );
 
-  return { shoppingList: getList(), generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems };
+  return { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems };
 }
