@@ -110,5 +110,19 @@ export function useShoppingList(weekPlanId: string) {
     [weekPlanId]
   );
 
-  return { shoppingList: getList(), generateFromWeekPlan, toggleItem, addManualItem, removeItem };
+  const addRecipeItems = useCallback(
+    (items: Omit<ShoppingItem, 'id' | 'checked' | 'source'>[]) => {
+      const all = loadAllLists();
+      const list = all[weekPlanId] ?? { weekPlanId, items: [] };
+      for (const item of items) {
+        list.items.push({ ...item, id: generateId(), checked: false, source: 'manual' });
+      }
+      all[weekPlanId] = list;
+      saveLists(all);
+      forceUpdate((n) => n + 1);
+    },
+    [weekPlanId]
+  );
+
+  return { shoppingList: getList(), generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems };
 }
