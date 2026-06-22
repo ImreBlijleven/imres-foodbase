@@ -2,9 +2,29 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const MODEL = 'gemini-2.5-flash-lite';
 
+// Private/link-local IP ranges that must not be fetched (SSRF prevention)
+const PRIVATE_HOST = /^(localhost$|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/;
+
+function isSafeUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+    if (PRIVATE_HOST.test(url.hostname)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Shared-secret auth — client must send the same token that is set in FOODBASE_INTERNAL_TOKEN
+  const internalToken = process.env.FOODBASE_INTERNAL_TOKEN;
+  if (internalToken && req.headers['x-foodbase-token'] !== internalToken) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const apiKey = process.env.FOODBASE_GEMINI_API_KEY;
@@ -16,11 +36,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     prompt: string;
     imageBase64?: string;
     mimeType?: string;
-    fetchUrl?: string;   // server-side URL fetch (omzeilt CORS)
+    fetchUrl?: string;
   };
 
-  // Optie: haal een URL op server-side en geef de tekst + titel terug
   if (fetchUrl) {
+    if (!isSafeUrl(fetchUrl)) {
+      return res.status(400).json({ error: 'Ongeldige of niet-toegestane URL.' });
+    }
     try {
       const pageRes = await fetch(fetchUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Foodbase/1.0)' },
@@ -31,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       const title = titleMatch ? titleMatch[1].trim() : '';
       return res.status(200).json({ text, title });
-    } catch (e) {
+    } catch {
       return res.status(502).json({ error: 'Kon de pagina niet ophalen.' });
     }
   }

@@ -1,10 +1,18 @@
 import type { Ingredient } from '../types';
 import { generateId } from '../utils';
 
+const INTERNAL_TOKEN = import.meta.env.VITE_FOODBASE_INTERNAL_TOKEN as string | undefined;
+
+function proxyHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (INTERNAL_TOKEN) headers['x-foodbase-token'] = INTERNAL_TOKEN;
+  return headers;
+}
+
 async function callProxy(prompt: string, imageBase64?: string, mimeType?: string): Promise<string> {
   const res = await fetch('/api/gemini', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: proxyHeaders(),
     body: JSON.stringify({ prompt, imageBase64, mimeType }),
   });
   if (!res.ok) {
@@ -18,7 +26,7 @@ async function callProxy(prompt: string, imageBase64?: string, mimeType?: string
 async function fetchUrlServerSide(url: string): Promise<{ text: string; title: string }> {
   const res = await fetch('/api/gemini', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: proxyHeaders(),
     body: JSON.stringify({ fetchUrl: url }),
   });
   if (!res.ok) {

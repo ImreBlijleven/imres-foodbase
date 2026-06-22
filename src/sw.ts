@@ -20,7 +20,7 @@ self.addEventListener('fetch', (event) => {
           (formData.get('text') as string | null) ||
           '';
 
-        if (file && file.size > 0) {
+        if (file && file.size > 0 && file.size < 20 * 1024 * 1024 && file.type.startsWith('image/')) {
           const cache = await caches.open('foodbase-share-v1');
           await cache.put(
             '/shared-image',
