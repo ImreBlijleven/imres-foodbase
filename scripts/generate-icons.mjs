@@ -1,55 +1,26 @@
-import { deflateSync } from 'zlib';
+import { Resvg } from '@resvg/resvg-js';
 import { writeFileSync } from 'fs';
 
-function crc32(buf) {
-  const table = new Uint32Array(256);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    table[i] = c;
-  }
-  let crc = 0xFFFFFFFF;
-  for (const b of buf) crc = table[(crc ^ b) & 0xFF] ^ (crc >>> 8);
-  return (crc ^ 0xFFFFFFFF) >>> 0;
+// Bowl icon SVG — forest green background (#2D4A3E) with cream bowl + steam
+const makeSvg = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${size}" height="${size}" fill="#2D4A3E"/>
+  <g transform="translate(${size / 2}, ${size / 2}) scale(${size / 56}) translate(-28, -28)">
+    <!-- Bowl body -->
+    <path d="M10 22h36l-4.5 18a4 4 0 01-4 3H18.5a4 4 0 01-4-3L10 22z" fill="#FDF0E8"/>
+    <!-- Handle -->
+    <path d="M46 27.5h3.5a4.5 4.5 0 010 9H46" stroke="#FDF0E8" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Steam left -->
+    <path d="M18 17c1-3 3-4 3-7.5" stroke="#FDF0E8" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/>
+    <!-- Steam right -->
+    <path d="M28 15c.5-2.8 2-4.5 2-8" stroke="#FDF0E8" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>`;
+
+for (const size of [180, 192, 512]) {
+  const svg = makeSvg(size);
+  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: size } });
+  const pngData = resvg.render();
+  const filename = size === 180 ? 'apple-touch-icon.png' : `icon-${size}.png`;
+  writeFileSync(`public/${filename}`, pngData.asPng());
+  console.log(`✓ ${filename}`);
 }
-
-function makePNG(size, r, g, b) {
-  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-
-  function chunk(type, data) {
-    const typeB = Buffer.from(type, 'ascii');
-    const len = Buffer.allocUnsafe(4);
-    len.writeUInt32BE(data.length, 0);
-    const combined = Buffer.concat([typeB, data]);
-    const crcBuf = Buffer.allocUnsafe(4);
-    crcBuf.writeUInt32BE(crc32(combined), 0);
-    return Buffer.concat([len, typeB, data, crcBuf]);
-  }
-
-  const ihdr = Buffer.allocUnsafe(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-
-  const rowBytes = size * 3 + 1;
-  const raw = Buffer.allocUnsafe(rowBytes * size);
-  for (let y = 0; y < size; y++) {
-    raw[y * rowBytes] = 0;
-    for (let x = 0; x < size; x++) {
-      const i = y * rowBytes + 1 + x * 3;
-      raw[i] = r; raw[i + 1] = g; raw[i + 2] = b;
-    }
-  }
-
-  return Buffer.concat([
-    sig,
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
-
-// #2D4A3E = rgb(45, 74, 62)
-writeFileSync('public/icon-192.png', makePNG(192, 45, 74, 62));
-writeFileSync('public/icon-512.png', makePNG(512, 45, 74, 62));
-console.log('✓ Icons gegenereerd: icon-192.png en icon-512.png');
