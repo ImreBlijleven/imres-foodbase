@@ -8,6 +8,9 @@ interface Props {
   userId: string;
   onSelectRecipe?: (recipe: Recipe) => void;
   selectMode?: boolean;
+  initialImage?: { base64: string; mimeType: string };
+  initialUrl?: string;
+  onSharedConsumed?: () => void;
 }
 
 type View = 'list' | 'add' | 'detail';
@@ -20,9 +23,9 @@ const Header = ({ onBack, title, right }: { onBack: () => void; title: string; r
   </div>
 );
 
-export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode }: Props) {
+export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode, initialImage, initialUrl, onSharedConsumed }: Props) {
   const { recipes, addRecipe, updateRecipe, deleteRecipe, forceUpdate } = useRecipes(userId);
-  const [view, setView] = useState<View>('list');
+  const [view, setView] = useState<View>(initialImage || initialUrl ? 'add' : 'list');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [editingLink, setEditingLink] = useState(false);
@@ -35,11 +38,14 @@ export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode
   if (view === 'add') {
     return (
       <AddRecipeScreen
-        onBack={() => setView('list')}
+        onBack={() => { setView('list'); onSharedConsumed?.(); }}
+        initialImage={initialImage}
+        initialUrl={initialUrl}
         onSave={(data) => {
           addRecipe(data);
           forceUpdate((n) => n + 1);
           setView('list');
+          onSharedConsumed?.();
         }}
       />
     );

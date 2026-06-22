@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Recipe, Ingredient } from '../types';
 import { IngredientEditor } from './IngredientEditor';
 import { extractFromText, extractFromImage, fetchAndExtract, fetchInstagram } from '../lib/gemini';
@@ -8,10 +8,18 @@ type Tab = 'handmatig' | 'website' | 'instagram' | 'screenshot';
 interface Props {
   onSave: (recipe: Omit<Recipe, 'id' | 'createdAt'>) => void;
   onBack: () => void;
+  initialImage?: { base64: string; mimeType: string };
+  initialUrl?: string;
 }
 
-export function AddRecipeScreen({ onSave, onBack }: Props) {
-  const [tab, setTab] = useState<Tab>('handmatig');
+export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Props) {
+  const isInstagram = initialUrl
+    ? initialUrl.includes('instagram.com') || initialUrl.includes('instagr.am')
+    : false;
+
+  const [tab, setTab] = useState<Tab>(
+    initialImage ? 'screenshot' : isInstagram ? 'instagram' : initialUrl ? 'website' : 'handmatig'
+  );
   const [name, setName] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -19,15 +27,32 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
   const [notReadable, setNotReadable] = useState(false);
 
   // Website/Instagram fetch URL
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(initialUrl ?? '');
   // Opgeslagen link bij recept
-  const [link, setLink] = useState('');
+  const [link, setLink] = useState(initialUrl ?? '');
 
   // Instagram fallback
   const [instagramFallback, setInstagramFallback] = useState(false);
   const [captionText, setCaptionText] = useState('');
 
+  // Shared image (via Web Share Target)
+  const [sharedPreview, setSharedPreview] = useState<string | null>(
+    initialImage ? `data:${initialImage.mimeType};base64,${initialImage.base64}` : null
+  );
+
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Auto-extract when arriving with a pre-loaded image
+  useEffect(() => {
+    if (initialImage && ingredients.length === 0) {
+      setLoading(true);
+      extractFromImage(initialImage.base64, initialImage.mimeType)
+        .then((ings) => setIngredients(ings))
+        .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Fout bij verwerking.'))
+        .finally(() => setLoading(false));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleSave() {
     if (!name.trim()) { setError('Vul een naam in.'); return; }
@@ -97,6 +122,7 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true); setError('');
+    setSharedPreview(URL.createObjectURL(file));
     try {
       const base64 = await resizeAndCompress(file);
       const ings = await extractFromImage(base64, 'image/jpeg');
@@ -215,15 +241,32 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
         {tab === 'screenshot' && (
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Foto van recept</label>
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={loading}
-              className="w-full py-10 border-2 border-dashed rounded-xl text-sm active:opacity-80 disabled:opacity-40 flex flex-col items-center gap-2"
-              style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-terracotta)', opacity: 0.7 }}
-            >
-              <span className="text-3xl">📷</span>
-              <span>{loading ? 'Verwerken…' : 'Tik om foto te kiezen'}</span>
-            </button>
+            {sharedPreview ? (
+              <div className="relative rounded-xl overflow-hidden">
+                <img src={sharedPreview} alt="Gedeelde foto" className="w-full object-cover max-h-48 rounded-xl" />
+                <button
+                  onClick={() => { setSharedPreview(null); fileRef.current?.click(); }}
+                  className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-lg"
+                >
+                  Vervangen
+                </button>
+                {loading && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-xl">
+                    <span className="text-white text-sm font-medium">Verwerken…</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={loading}
+                className="w-full py-10 border-2 border-dashed rounded-xl text-sm active:opacity-80 disabled:opacity-40 flex flex-col items-center gap-2"
+                style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-terracotta)', opacity: 0.7 }}
+              >
+                <span className="text-3xl">📷</span>
+                <span>{loading ? 'Verwerken…' : 'Tik om foto te kiezen'}</span>
+              </button>
+            )}
             <input
               ref={fileRef}
               type="file"

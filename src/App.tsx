@@ -11,6 +11,39 @@ import { migrateLocalStorageToSupabase } from './lib/migrate';
 
 type Screen = 'home' | 'week' | 'shopping' | 'recipes';
 
+interface SharedPayload {
+  type: 'image';
+  base64: string;
+  mimeType: string;
+}
+
+async function consumeSharedContent(): Promise<{ image?: SharedPayload; url?: string } | null> {
+  const params = new URLSearchParams(window.location.search);
+  window.history.replaceState({}, '', '/');
+
+  if (params.get('shared') === 'image') {
+    try {
+      const cache = await caches.open('foodbase-share-v1');
+      const response = await cache.match('/shared-image');
+      if (response) {
+        await cache.delete('/shared-image');
+        const blob = await response.blob();
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(blob);
+        });
+        return { image: { type: 'image', base64, mimeType: blob.type } };
+      }
+    } catch { /* ignore */ }
+  }
+
+  const shareUrl = params.get('share_url');
+  if (shareUrl) return { url: decodeURIComponent(shareUrl) };
+
+  return null;
+}
+
 const BackArrow = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
     <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -118,11 +151,22 @@ function WeekScreen({ userId, onHome }: { userId: string; onHome: () => void }) 
 export default function App() {
   const { user, loading } = useAuth();
   const [screen, setScreen] = useState<Screen>('home');
+  const [sharedImage, setSharedImage] = useState<SharedPayload | undefined>();
+  const [sharedUrl, setSharedUrl] = useState<string | undefined>();
 
   // Auto-migrate localStorage data on first login
   useEffect(() => {
     if (user) migrateLocalStorageToSupabase(user.id);
   }, [user?.id]);
+
+  // Handle Web Share Target incoming content
+  useEffect(() => {
+    consumeSharedContent().then((payload) => {
+      if (!payload) return;
+      if (payload.image) { setSharedImage(payload.image); setScreen('recipes'); }
+      if (payload.url) { setSharedUrl(payload.url); setScreen('recipes'); }
+    });
+  }, []);
 
   if (loading) {
     return (
@@ -156,7 +200,13 @@ export default function App() {
   if (screen === 'recipes') {
     return (
       <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
-        <RecipeLibraryScreen userId={user.id} onBack={() => setScreen('home')} />
+        <RecipeLibraryScreen
+          userId={user.id}
+          onBack={() => setScreen('home')}
+          initialImage={sharedImage}
+          initialUrl={sharedUrl}
+          onSharedConsumed={() => { setSharedImage(undefined); setSharedUrl(undefined); }}
+        />
       </div>
     );
   }
