@@ -1,26 +1,24 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
+const toEmail = (username: string) => `${username.toLowerCase().trim()}@foodbase.app`;
+
 export function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!username.trim() || !password) return;
     setLoading(true);
     setError('');
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+    const { error: err } = await supabase.auth.signInWithPassword({
+      email: toEmail(username),
+      password,
     });
-    if (err) {
-      setError(err.message);
-    } else {
-      setSent(true);
-    }
+    if (err) setError('Gebruikersnaam of wachtwoord klopt niet.');
     setLoading(false);
   }
 
@@ -55,65 +53,48 @@ export function LoginScreen() {
 
       {/* Form */}
       <div className="flex-1 flex flex-col justify-center px-6 pb-12">
-        {sent ? (
-          <div className="text-center space-y-3">
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(45,74,62,0.1)' }}
-            >
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={{ color: 'var(--c-forest)' }}>
-                <path d="M4 8l10 7 10-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <rect x="3" y="6" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </div>
-            <h2 className="font-serif-display text-2xl" style={{ color: 'var(--c-espresso)' }}>
-              Check je mail
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <h2 className="font-serif-display text-2xl mb-1" style={{ color: 'var(--c-espresso)' }}>
+              Inloggen
             </h2>
-            <p className="text-sm" style={{ color: 'var(--c-terracotta)' }}>
-              We hebben een inloglink gestuurd naar<br />
-              <strong style={{ color: 'var(--c-espresso)' }}>{email}</strong>
-            </p>
-            <p className="text-xs mt-4" style={{ color: 'var(--c-terracotta)', opacity: 0.6 }}>
-              Klik op de link in de mail om in te loggen. Je kunt dit venster sluiten.
-            </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <h2 className="font-serif-display text-2xl mb-1" style={{ color: 'var(--c-espresso)' }}>
-                Inloggen
-              </h2>
-              <p className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>
-                Vul je e-mailadres in. Je ontvangt een magische inloglink.
-              </p>
-            </div>
 
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              inputMode="email"
-              placeholder="jouw@email.nl"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border rounded-xl px-4 py-3.5 text-base focus:outline-none"
-              style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-espresso)' }}
-            />
+          <input
+            type="text"
+            required
+            autoComplete="username"
+            placeholder="Gebruikersnaam"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full border rounded-xl px-4 py-3.5 text-base focus:outline-none"
+            style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-espresso)' }}
+          />
 
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
-            )}
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            placeholder="Wachtwoord"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border rounded-xl px-4 py-3.5 text-base focus:outline-none"
+            style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-espresso)' }}
+          />
 
-            <button
-              type="submit"
-              disabled={loading || !email.trim()}
-              className="w-full py-3.5 text-white font-semibold rounded-xl active:opacity-80 disabled:opacity-40 transition-opacity"
-              style={{ background: 'var(--c-forest)' }}
-            >
-              {loading ? 'Versturen…' : 'Stuur inloglink'}
-            </button>
-          </form>
-        )}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !username.trim() || !password}
+            className="w-full py-3.5 text-white font-semibold rounded-xl active:opacity-80 disabled:opacity-40 transition-opacity"
+            style={{ background: 'var(--c-forest)' }}
+          >
+            {loading ? 'Inloggen…' : 'Inloggen'}
+          </button>
+        </form>
       </div>
     </div>
   );
