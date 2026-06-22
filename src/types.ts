@@ -54,6 +54,14 @@ export interface WeekPlan {
   days: DayPlan[];
 }
 
+export interface Recipe {
+  id: string;
+  name: string;
+  ingredients: Ingredient[];
+  source: string;        // url, "handmatig", "screenshot", "instagram"
+  createdAt: string;
+}
+
 export interface ShoppingItem {
   id: string;
   name: string;
