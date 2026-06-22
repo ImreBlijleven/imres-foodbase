@@ -16,6 +16,7 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notReadable, setNotReadable] = useState(false);
 
   // Website/Instagram
   const [url, setUrl] = useState('');
@@ -40,11 +41,15 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
 
   async function handleWebsiteImport() {
     if (!url.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setNotReadable(false);
     try {
       const { title, ingredients: ings } = await fetchAndExtract(url.trim());
       if (!name && title) setName(title);
-      setIngredients(ings);
+      if (ings.length === 0) {
+        setNotReadable(true);
+      } else {
+        setIngredients(ings);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Fout bij ophalen.');
     } finally {
@@ -54,10 +59,14 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
 
   async function handleInstagramImport() {
     if (!url.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setNotReadable(false);
     try {
       const { ingredients: ings } = await fetchInstagram(url.trim());
-      setIngredients(ings);
+      if (ings.length === 0) {
+        setNotReadable(true);
+      } else {
+        setIngredients(ings);
+      }
     } catch (e: unknown) {
       if (e instanceof Error && e.message === 'instagram_fallback') {
         setInstagramFallback(true);
@@ -216,6 +225,27 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
               className="hidden"
               onChange={handleFileChange}
             />
+          </div>
+        )}
+
+        {notReadable && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-4 space-y-3">
+            <p className="text-sm text-amber-800 font-medium">
+              De ingrediënten konden niet worden gelezen van deze pagina.
+            </p>
+            <p className="text-xs text-amber-600">
+              Maak een screenshot van het recept en upload die — dan leest de AI de ingrediënten uit de foto.
+            </p>
+            <button
+              onClick={() => {
+                setNotReadable(false);
+                setTab('screenshot');
+                setTimeout(() => fileRef.current?.click(), 100);
+              }}
+              className="w-full py-2.5 bg-amber-500 text-white font-semibold rounded-xl active:bg-amber-600 text-sm"
+            >
+              📷 Screenshot uploaden
+            </button>
           </div>
         )}
 
