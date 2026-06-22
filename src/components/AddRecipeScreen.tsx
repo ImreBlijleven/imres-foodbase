@@ -18,8 +18,10 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
   const [error, setError] = useState('');
   const [notReadable, setNotReadable] = useState(false);
 
-  // Website/Instagram
+  // Website/Instagram fetch URL
   const [url, setUrl] = useState('');
+  // Opgeslagen link bij recept
+  const [link, setLink] = useState('');
 
   // Instagram fallback
   const [instagramFallback, setInstagramFallback] = useState(false);
@@ -33,10 +35,7 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
   }
 
   function sourceForTab() {
-    if (tab === 'website') return url;
-    if (tab === 'instagram') return url || 'instagram';
-    if (tab === 'screenshot') return 'screenshot';
-    return 'handmatig';
+    return link.trim() || (tab === 'screenshot' ? 'screenshot' : tab === 'instagram' ? 'instagram' : 'handmatig');
   }
 
   async function handleWebsiteImport() {
@@ -45,6 +44,7 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
     try {
       const { title, ingredients: ings } = await fetchAndExtract(url.trim());
       if (!name && title) setName(title);
+      if (!link) setLink(url.trim());
       if (ings.length === 0) {
         setNotReadable(true);
       } else {
@@ -62,6 +62,7 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
     setLoading(true); setError(''); setNotReadable(false);
     try {
       const { ingredients: ings } = await fetchInstagram(url.trim());
+      if (!link) setLink(url.trim());
       if (ings.length === 0) {
         setNotReadable(true);
       } else {
@@ -261,6 +262,18 @@ export function AddRecipeScreen({ onSave, onBack }: Props) {
             placeholder="Pasta arrabiata"
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        {/* Link */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Link (optioneel)</label>
+          <input
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+            placeholder="https://..."
+            type="url"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
           />
         </div>
 

@@ -12,10 +12,12 @@ interface Props {
 type View = 'list' | 'add' | 'detail';
 
 export function RecipeLibraryScreen({ onBack, onSelectRecipe, selectMode }: Props) {
-  const { recipes, addRecipe, deleteRecipe, forceUpdate } = useRecipes();
+  const { recipes, addRecipe, updateRecipe, deleteRecipe, forceUpdate } = useRecipes();
   const [view, setView] = useState<View>('list');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Recipe | null>(null);
+  const [editingLink, setEditingLink] = useState(false);
+  const [linkDraft, setLinkDraft] = useState('');
 
   const filtered = recipes.filter((r) =>
     r.name.toLowerCase().includes(search.toLowerCase())
@@ -49,12 +51,52 @@ export function RecipeLibraryScreen({ onBack, onSelectRecipe, selectMode }: Prop
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {selected.source && selected.source !== 'handmatig' && selected.source !== 'screenshot' && selected.source !== 'instagram' && (
-            <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Bron</p>
-              <p className="text-sm text-blue-500 break-all">{selected.source}</p>
+          {/* Link sectie */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Link</p>
+              <button
+                onClick={() => { setEditingLink(true); setLinkDraft(selected.source && !['handmatig','screenshot','instagram'].includes(selected.source) ? selected.source : ''); }}
+                className="text-xs text-green-500 font-medium active:text-green-700"
+              >
+                {selected.source && !['handmatig','screenshot','instagram'].includes(selected.source) ? 'Bewerken' : 'Toevoegen'}
+              </button>
             </div>
-          )}
+            {editingLink ? (
+              <div className="flex gap-2">
+                <input
+                  autoFocus
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+                  placeholder="https://..."
+                  type="url"
+                  value={linkDraft}
+                  onChange={(e) => setLinkDraft(e.target.value)}
+                />
+                <button
+                  onClick={() => {
+                    const newSource = linkDraft.trim() || 'handmatig';
+                    updateRecipe(selected.id, { source: newSource });
+                    setSelected({ ...selected, source: newSource });
+                    setEditingLink(false);
+                  }}
+                  className="px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium active:bg-green-600"
+                >
+                  ✓
+                </button>
+              </div>
+            ) : selected.source && !['handmatig','screenshot','instagram'].includes(selected.source) ? (
+              <a
+                href={selected.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-500 break-all underline"
+              >
+                {selected.source}
+              </a>
+            ) : (
+              <p className="text-sm text-gray-300">Geen link</p>
+            )}
+          </div>
           <div>
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-2">
               Ingrediënten ({selected.ingredients.length})
