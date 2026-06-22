@@ -58,6 +58,9 @@ export function LoginScreen() {
             <h2 className="font-serif-display text-2xl mb-1" style={{ color: 'var(--c-espresso)' }}>
               Inloggen
             </h2>
+            <p className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>
+              Vul je gebruikersnaam en wachtwoord in.
+            </p>
           </div>
 
           <input
