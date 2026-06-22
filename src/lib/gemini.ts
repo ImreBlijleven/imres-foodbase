@@ -7,14 +7,25 @@ async function callProxy(prompt: string, imageBase64?: string, mimeType?: string
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt, imageBase64, mimeType }),
   });
-
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error ?? `Fout: ${res.status}`);
+    throw new Error((err as { error?: string })?.error ?? `Fout: ${res.status}`);
   }
-
-  const data = await res.json();
+  const data = await res.json() as { text: string };
   return data.text ?? '';
+}
+
+async function fetchUrlServerSide(url: string): Promise<{ text: string; title: string }> {
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fetchUrl: url }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string })?.error ?? 'Kon pagina niet ophalen.');
+  }
+  return res.json() as Promise<{ text: string; title: string }>;
 }
 
 function parseIngredients(raw: string): Ingredient[] {
@@ -61,35 +72,16 @@ export async function extractFromImage(base64: string, mimeType: string): Promis
 }
 
 export async function fetchAndExtract(url: string): Promise<{ title: string; ingredients: Ingredient[] }> {
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  let text = '';
-  let title = '';
-
-  try {
-    const res = await fetch(proxyUrl);
-    const json = await res.json();
-    const html: string = json.contents ?? '';
-    text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 8000);
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    title = titleMatch ? titleMatch[1].trim() : '';
-  } catch {
-    throw new Error('Kon de pagina niet ophalen. Controleer de URL.');
-  }
-
+  const { text, title } = await fetchUrlServerSide(url);
   const ingredients = await extractFromText(text);
   return { title, ingredients };
 }
 
 export async function fetchInstagram(url: string): Promise<{ ingredients: Ingredient[] }> {
   try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxyUrl);
-    const json = await res.json();
-    const html: string = json.contents ?? '';
-    const metaMatch = html.match(/<meta[^>]+property="og:description"[^>]+content="([^"]+)"/i);
-    const caption = metaMatch ? metaMatch[1] : '';
-    if (!caption) throw new Error('no_caption');
-    const ingredients = await extractFromText(caption);
+    const { text } = await fetchUrlServerSide(url);
+    if (!text.trim()) throw new Error('instagram_fallback');
+    const ingredients = await extractFromText(text);
     return { ingredients };
   } catch {
     throw new Error('instagram_fallback');

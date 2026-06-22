@@ -9,14 +9,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const apiKey = process.env.FOODBASE_GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY niet ingesteld op de server.' });
+    return res.status(500).json({ error: 'FOODBASE_GEMINI_API_KEY niet ingesteld op de server.' });
   }
 
-  const { prompt, imageBase64, mimeType } = req.body as {
+  const { prompt, imageBase64, mimeType, fetchUrl } = req.body as {
     prompt: string;
     imageBase64?: string;
     mimeType?: string;
+    fetchUrl?: string;   // server-side URL fetch (omzeilt CORS)
   };
+
+  // Optie: haal een URL op server-side en geef de tekst + titel terug
+  if (fetchUrl) {
+    try {
+      const pageRes = await fetch(fetchUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Foodbase/1.0)' },
+        signal: AbortSignal.timeout(10000),
+      });
+      const html = await pageRes.text();
+      const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 8000);
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      return res.status(200).json({ text, title });
+    } catch (e) {
+      return res.status(502).json({ error: 'Kon de pagina niet ophalen.' });
+    }
+  }
 
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt ontbreekt.' });
@@ -39,13 +57,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!geminiRes.ok) {
       const err = await geminiRes.json().catch(() => ({}));
-      return res.status(geminiRes.status).json({ error: err?.error?.message ?? 'Gemini fout' });
+      return res.status(geminiRes.status).json({ error: (err as { error?: { message?: string } })?.error?.message ?? 'Gemini fout' });
     }
 
-    const data = await geminiRes.json();
+    const data = await geminiRes.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
     const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     return res.status(200).json({ text });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: 'Serverfout bij Gemini aanroep.' });
   }
 }
