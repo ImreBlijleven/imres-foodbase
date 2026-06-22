@@ -1,4 +1,4 @@
-import { deflateRawSync } from 'zlib';
+import { deflateSync } from 'zlib';
 import { writeFileSync } from 'fs';
 
 function crc32(buf) {
@@ -44,7 +44,7 @@ function makePNG(size, r, g, b) {
   return Buffer.concat([
     sig,
     chunk('IHDR', ihdr),
-    chunk('IDAT', deflateRawSync(raw)),
+    chunk('IDAT', deflateSync(raw)),
     chunk('IEND', Buffer.alloc(0)),
   ]);
 }
