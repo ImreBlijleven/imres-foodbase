@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { Recipe } from '../types';
 import { useRecipes } from '../hooks/useRecipes';
 import { AddRecipeScreen } from './AddRecipeScreen';
+import { BackArrow } from './icons';
 
 interface Props {
   onBack: () => void;
@@ -18,7 +19,9 @@ type View = 'list' | 'add' | 'detail';
 
 const Header = ({ onBack, title, right }: { onBack: () => void; title: string; right?: ReactNode }) => (
   <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
-    <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+    <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70">
+      <BackArrow />
+    </button>
     <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>{title}</h1>
     {right}
   </div>

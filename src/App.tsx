@@ -6,6 +6,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { WeekGrid } from './components/WeekGrid';
 import { ShoppingListScreen } from './components/ShoppingListScreen';
 import { RecipeLibraryScreen } from './components/RecipeLibraryScreen';
+import { BowlIcon, BackArrow } from './components/icons';
 import { getWeekStart, addWeeks, getWeekNumber } from './utils';
 import { migrateLocalStorageToSupabase } from './lib/migrate';
 
@@ -43,12 +44,6 @@ async function consumeSharedContent(): Promise<{ image?: SharedPayload; url?: st
 
   return null;
 }
-
-const BackArrow = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-    <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const CartIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -173,13 +168,10 @@ export default function App() {
       <div className="flex items-center justify-center h-svh" style={{ background: 'var(--c-espresso)' }}>
         <div className="text-center">
           <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'var(--c-forest)' }}
+            className="rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ width: 72, height: 72, background: 'var(--c-forest)' }}
           >
-            <svg width="36" height="36" viewBox="0 0 56 56" fill="none">
-              <path d="M10 22h36l-4.5 18a4 4 0 01-4 3H18.5a4 4 0 01-4-3L10 22z" fill="#FDF0E8" />
-              <path d="M46 27.5h3.5a4.5 4.5 0 010 9H46" stroke="#FDF0E8" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
+            <BowlIcon size={44} />
           </div>
           <p className="text-sm font-serif-display" style={{ color: 'var(--c-cream)', opacity: 0.6 }}>Laden…</p>
         </div>

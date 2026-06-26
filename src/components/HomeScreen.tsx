@@ -1,15 +1,8 @@
+import { BowlIcon } from './icons';
+
 interface Props {
   onNavigate: (screen: 'week' | 'recipes' | 'shopping') => void;
 }
-
-const BowlIcon = ({ size = 40, color = '#FDF0E8' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 22h36l-4.5 18a4 4 0 01-4 3H18.5a4 4 0 01-4-3L10 22z" fill={color} />
-    <path d="M46 27.5h3.5a4.5 4.5 0 010 9H46" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M18 17c1-3 3-4 3-7.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" opacity="0.7" />
-    <path d="M28 15c.5-2.8 2-4.5 2-8" stroke={color} strokeWidth="2.2" strokeLinecap="round" opacity="0.7" />
-  </svg>
-);
 
 const NAV_ITEMS = [
   {
@@ -65,7 +58,7 @@ export function HomeScreen({ onNavigate }: Props) {
     >
       {/* Hero */}
       <div
-        className="flex flex-col items-center justify-center flex-shrink-0 pt-16 pb-10 px-6"
+        className="flex flex-col items-center justify-center flex-shrink-0 pt-12 pb-8 px-6"
         style={{ background: 'var(--c-espresso)' }}
       >
         <div

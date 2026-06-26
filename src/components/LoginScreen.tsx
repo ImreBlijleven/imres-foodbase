@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { BowlIcon } from './icons';
 
 const toEmail = (username: string) => `${username.toLowerCase().trim()}@foodbase.app`;
 
@@ -26,19 +27,14 @@ export function LoginScreen() {
     <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
       {/* Hero */}
       <div
-        className="flex flex-col items-center justify-center flex-shrink-0 pt-20 pb-14 px-6"
+        className="flex flex-col items-center justify-center flex-shrink-0 pt-14 pb-10 px-6"
         style={{ background: 'var(--c-espresso)' }}
       >
         <div
           className="flex items-center justify-center rounded-2xl mb-5"
           style={{ width: 72, height: 72, background: 'var(--c-forest)' }}
         >
-          <svg width="44" height="44" viewBox="0 0 56 56" fill="none">
-            <path d="M10 22h36l-4.5 18a4 4 0 01-4 3H18.5a4 4 0 01-4-3L10 22z" fill="#FDF0E8" />
-            <path d="M46 27.5h3.5a4.5 4.5 0 010 9H46" stroke="#FDF0E8" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M18 17c1-3 3-4 3-7.5" stroke="#FDF0E8" strokeWidth="2.2" strokeLinecap="round" opacity="0.7" />
-            <path d="M28 15c.5-2.8 2-4.5 2-8" stroke="#FDF0E8" strokeWidth="2.2" strokeLinecap="round" opacity="0.7" />
-          </svg>
+          <BowlIcon size={44} />
         </div>
         <h1
           className="font-serif-display text-4xl text-center mb-2 leading-tight"

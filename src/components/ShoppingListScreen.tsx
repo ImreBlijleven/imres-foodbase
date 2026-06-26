@@ -6,6 +6,7 @@ import { useShoppingList } from '../hooks/useShoppingList';
 import { WeekOverview } from './WeekOverview';
 import { RecipeLibraryScreen } from './RecipeLibraryScreen';
 import { IngredientPickerSheet } from './IngredientPickerSheet';
+import { BackArrow } from './icons';
 
 const SLOT_LABELS = { ontbijt: 'Ontbijt', lunch: 'Lunch', diner: 'Diner' };
 
@@ -36,12 +37,12 @@ function MealCountSummary({ counts }: { counts: { slot: 'ontbijt' | 'lunch' | 'd
   if (counts.length === 0) return null;
   return (
     <div className="mx-4 mt-3 mb-1 bg-white rounded-xl px-4 py-3 shadow-sm">
-      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-2">Maaltijden deze week</p>
+      <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--c-terracotta)', opacity: 0.7 }}>Maaltijden deze week</p>
       <div className="flex gap-3">
         {counts.map(({ slot, count }) => (
           <div key={slot} className="flex items-center gap-1.5">
-            <span className="text-base font-bold text-gray-800">{count}×</span>
-            <span className="text-sm text-gray-500">{SLOT_LABELS[slot]}</span>
+            <span className="text-base font-bold" style={{ color: 'var(--c-espresso)' }}>{count}×</span>
+            <span className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>{SLOT_LABELS[slot]}</span>
           </div>
         ))}
       </div>
@@ -107,12 +108,12 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
-          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
           <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         </div>
         <WeekOverview weekPlan={weekPlan} />
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <p className="text-gray-600 text-sm">Voor welke maaltijden neem jij de boodschappen mee?</p>
+          <p className="text-sm" style={{ color: 'var(--c-espresso)', opacity: 0.7 }}>Voor welke maaltijden neem jij de boodschappen mee?</p>
           {needChoice.map(({ meal, date }) => {
             const dayIndex = weekPlan.days.findIndex((d) => d.date === date);
             const dayName = dayIndex >= 0 ? DAY_NAMES[dayIndex] : '';
@@ -201,13 +202,13 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
-          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
           <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         </div>
         <WeekOverview weekPlan={weekPlan} />
         <div className="flex-1 flex items-center justify-center p-8 text-center">
           <div>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-sm mb-6" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>
               Genereer de boodschappenlijst op basis van de weekplanning.
             </p>
             <button
@@ -226,7 +227,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
-        <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
+        <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
         <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         <button
           onClick={() => setSupermarktMode((m) => !m)}
