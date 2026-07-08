@@ -49,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         signal: AbortSignal.timeout(10000),
       });
       const html = await pageRes.text();
-      const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 8000);
+      const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 16000);
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       const title = titleMatch ? titleMatch[1].trim() : '';
       return res.status(200).json({ text, title });
@@ -73,7 +73,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts }] }),
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: { responseMimeType: 'application/json' },
+        }),
       }
     );
 

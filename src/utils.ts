@@ -48,3 +48,8 @@ export function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
 }
+
+export function formatAmount(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return String(rounded).replace('.', ',');
+}

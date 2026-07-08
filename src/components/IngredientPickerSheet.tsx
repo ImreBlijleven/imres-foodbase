@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Recipe, ShoppingItem } from '../types';
+import { formatAmount } from '../utils';
 
 interface Props {
   recipe: Recipe;
@@ -87,7 +88,7 @@ export function IngredientPickerSheet({ recipe, onAdd, onClose }: Props) {
                 <span className="flex-1 text-sm text-gray-800">{ing.name}</span>
                 {(ing.amount || ing.unit) && (
                   <span className="text-xs text-gray-400">
-                    {ing.amount ?? ''}{ing.unit ? ` ${ing.unit}` : ''}
+                    {ing.amount != null ? formatAmount(ing.amount) : ''}{ing.unit ? ` ${ing.unit}` : ''}
                   </span>
                 )}
                 <input

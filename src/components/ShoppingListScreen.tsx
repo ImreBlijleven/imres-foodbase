@@ -10,39 +10,58 @@ import { BackArrow } from './icons';
 
 const SLOT_LABELS = { ontbijt: 'Ontbijt', lunch: 'Lunch', diner: 'Diner' };
 
+type SlotBreakdown = {
+  slot: 'ontbijt' | 'lunch' | 'diner';
+  breakdown: { persons: number; count: number }[];
+};
+
 function computeMealCounts(
   weekPlan: WeekPlan,
   samenChoices: Record<string, number>,
   customChoices: Record<string, boolean>
-): { slot: 'ontbijt' | 'lunch' | 'diner'; count: number }[] {
-  const counts = { ontbijt: 0, lunch: 0, diner: 0 };
+): SlotBreakdown[] {
+  // Per slot: hoeveel maaltijden per aantal personen (bijv. diner → {3: 2, 2: 1})
+  const perSlot: Record<'ontbijt' | 'lunch' | 'diner', Record<number, number>> = {
+    ontbijt: {}, lunch: {}, diner: {},
+  };
   for (const day of weekPlan.days) {
     for (const slot of ['ontbijt', 'lunch', 'diner'] as const) {
       const meal = day[slot];
       if (!meal) continue;
       const config = MEAL_TYPE_CONFIG[meal.type];
-      let portions = config.defaultInclude ? 1 : 0;
-      if (meal.type === 'eline') portions = 2;
-      if (meal.type === 'samen') portions = samenChoices[meal.id] ?? 0;
-      if (meal.type === 'custom') portions = (customChoices[meal.id] ?? false) ? 1 : 0;
-      counts[slot] += portions;
+      let persons = config.defaultInclude ? 1 : 0;
+      if (meal.type === 'eline') persons = 2;
+      if (meal.type === 'samen') persons = samenChoices[meal.id] ?? 0;
+      if (meal.type === 'custom') persons = (customChoices[meal.id] ?? false) ? 1 : 0;
+      if (persons === 0) continue;
+      perSlot[slot][persons] = (perSlot[slot][persons] ?? 0) + 1;
     }
   }
   return (['ontbijt', 'lunch', 'diner'] as const)
-    .filter((s) => counts[s] > 0)
-    .map((slot) => ({ slot, count: counts[slot] }));
+    .map((slot) => ({
+      slot,
+      breakdown: Object.entries(perSlot[slot])
+        .map(([persons, count]) => ({ persons: Number(persons), count }))
+        .sort((a, b) => b.persons - a.persons),
+    }))
+    .filter((s) => s.breakdown.length > 0);
 }
 
-function MealCountSummary({ counts }: { counts: { slot: 'ontbijt' | 'lunch' | 'diner'; count: number }[] }) {
+function MealCountSummary({ counts }: { counts: SlotBreakdown[] }) {
   if (counts.length === 0) return null;
   return (
     <div className="mx-4 mt-3 mb-1 bg-white rounded-xl px-4 py-3 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--c-terracotta)', opacity: 0.7 }}>Maaltijden deze week</p>
-      <div className="flex gap-3">
-        {counts.map(({ slot, count }) => (
-          <div key={slot} className="flex items-center gap-1.5">
-            <span className="text-base font-bold" style={{ color: 'var(--c-espresso)' }}>{count}×</span>
-            <span className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>{SLOT_LABELS[slot]}</span>
+      <div className="space-y-1.5">
+        {counts.map(({ slot, breakdown }) => (
+          <div key={slot} className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-sm font-semibold" style={{ color: 'var(--c-espresso)' }}>{SLOT_LABELS[slot]}</span>
+            {breakdown.map(({ persons, count }, i) => (
+              <span key={persons} className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.9 }}>
+                {i > 0 && <span style={{ opacity: 0.5 }}>· </span>}
+                {count}× {persons} pers.
+              </span>
+            ))}
           </div>
         ))}
       </div>
@@ -79,7 +98,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   const [newItem, setNewItem] = useState('');
   const [showRecipePicker, setShowRecipePicker] = useState(false);
   const [pickedRecipe, setPickedRecipe] = useState<Recipe | null>(null);
-  const [mealCounts, setMealCounts] = useState<{ slot: 'ontbijt' | 'lunch' | 'diner'; count: number }[]>([]);
+  const [mealCounts, setMealCounts] = useState<SlotBreakdown[]>([]);
 
   // Samen/custom choices
   const needChoice = collectMealsNeedingChoice(weekPlan);

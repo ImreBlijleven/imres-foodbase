@@ -54,12 +54,18 @@ export interface WeekPlan {
   days: DayPlan[];
 }
 
+export const RECIPE_CATEGORIES = ['Ontbijt', 'Lunch', 'Diner', 'Dessert', 'Snack', 'Bakken'] as const;
+export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];
+
 export interface Recipe {
   id: string;
   name: string;
   ingredients: Ingredient[];
   source: string;        // url, "handmatig", "screenshot", "instagram"
   createdAt: string;
+  servings?: number;          // basisaantal personen
+  category?: RecipeCategory;
+  instructions?: string[];    // bereidingsstappen
 }
 
 export interface ShoppingItem {

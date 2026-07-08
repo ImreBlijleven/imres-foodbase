@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import type { Recipe, Ingredient } from '../types';
+import type { Recipe, Ingredient, RecipeCategory } from '../types';
+import { RECIPE_CATEGORIES } from '../types';
 import { IngredientEditor } from './IngredientEditor';
+import { StepsEditor } from './StepsEditor';
+import type { ExtractedRecipe } from '../lib/gemini';
 import { extractFromText, extractFromImage, fetchAndExtract, fetchInstagram } from '../lib/gemini';
 
 type Tab = 'handmatig' | 'website' | 'instagram' | 'screenshot';
@@ -22,6 +25,9 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
   );
   const [name, setName] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [servings, setServings] = useState<number | null>(null);
+  const [category, setCategory] = useState<RecipeCategory | null>(null);
+  const [steps, setSteps] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notReadable, setNotReadable] = useState(false);
@@ -42,12 +48,21 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
 
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Pas een AI-extractieresultaat toe op alle velden (naam alleen als die nog leeg is)
+  function applyExtracted(result: ExtractedRecipe) {
+    if (result.title) setName((n) => n || result.title!);
+    if (result.servings) setServings(result.servings);
+    if (result.category) setCategory(result.category);
+    if (result.steps.length > 0) setSteps(result.steps);
+    setIngredients(result.ingredients);
+  }
+
   // Auto-extract when arriving with a pre-loaded image
   useEffect(() => {
     if (initialImage && ingredients.length === 0) {
       setLoading(true);
       extractFromImage(initialImage.base64, initialImage.mimeType)
-        .then((ings) => setIngredients(ings))
+        .then(applyExtracted)
         .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Fout bij verwerking.'))
         .finally(() => setLoading(false));
     }
@@ -56,7 +71,15 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
 
   function handleSave() {
     if (!name.trim()) { setError('Vul een naam in.'); return; }
-    onSave({ name: name.trim(), ingredients, source: sourceForTab() });
+    const trimmedSteps = steps.map((s) => s.trim()).filter(Boolean);
+    onSave({
+      name: name.trim(),
+      ingredients,
+      source: sourceForTab(),
+      servings: servings ?? undefined,
+      category: category ?? undefined,
+      instructions: trimmedSteps.length > 0 ? trimmedSteps : undefined,
+    });
   }
 
   function sourceForTab() {
@@ -67,13 +90,12 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
     if (!url.trim()) return;
     setLoading(true); setError(''); setNotReadable(false);
     try {
-      const { title, ingredients: ings } = await fetchAndExtract(url.trim());
-      if (!name && title) setName(title);
+      const result = await fetchAndExtract(url.trim());
       if (!link) setLink(url.trim());
-      if (ings.length === 0) {
+      if (result.ingredients.length === 0) {
         setNotReadable(true);
       } else {
-        setIngredients(ings);
+        applyExtracted(result);
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Fout bij ophalen.');
@@ -86,12 +108,12 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
     if (!url.trim()) return;
     setLoading(true); setError(''); setNotReadable(false);
     try {
-      const { ingredients: ings } = await fetchInstagram(url.trim());
+      const result = await fetchInstagram(url.trim());
       if (!link) setLink(url.trim());
-      if (ings.length === 0) {
+      if (result.ingredients.length === 0) {
         setNotReadable(true);
       } else {
-        setIngredients(ings);
+        applyExtracted(result);
       }
     } catch (e: unknown) {
       if (e instanceof Error && e.message === 'instagram_fallback') {
@@ -108,8 +130,8 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
     if (!captionText.trim()) return;
     setLoading(true); setError('');
     try {
-      const ings = await extractFromText(captionText.trim());
-      setIngredients(ings);
+      const result = await extractFromText(captionText.trim());
+      applyExtracted(result);
       setInstagramFallback(false);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Fout bij extractie.');
@@ -125,9 +147,9 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
     setSharedPreview(URL.createObjectURL(file));
     try {
       const base64 = await resizeAndCompress(file);
-      const ings = await extractFromImage(base64, 'image/jpeg');
-      if (!name) setName(file.name.replace(/\.[^.]+$/, ''));
-      setIngredients(ings);
+      const result = await extractFromImage(base64, 'image/jpeg');
+      applyExtracted(result);
+      if (!name && !result.title) setName(file.name.replace(/\.[^.]+$/, ''));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Fout bij verwerking.');
     } finally {
@@ -314,6 +336,44 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
           />
         </div>
 
+        {/* Categorie */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Categorie (optioneel)</label>
+          <div className="flex flex-wrap gap-2">
+            {RECIPE_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategory((c) => (c === cat ? null : cat))}
+                className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors active:opacity-80"
+                style={category === cat
+                  ? { background: 'var(--c-forest)', color: 'var(--c-cream)' }
+                  : { background: 'white', color: 'var(--c-espresso)', border: '1px solid var(--c-cream-dark)' }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Personen */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Aantal personen (optioneel)</label>
+          <input
+            className="w-24 border rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+            style={{ borderColor: 'var(--c-cream-dark)' }}
+            placeholder="4"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={99}
+            value={servings ?? ''}
+            onChange={(e) => {
+              const v = parseInt(e.target.value);
+              setServings(Number.isFinite(v) && v > 0 ? Math.min(v, 99) : null);
+            }}
+          />
+        </div>
+
         {/* Link */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>Link (optioneel)</label>
@@ -333,6 +393,14 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
             Ingrediënten {ingredients.length > 0 && `(${ingredients.length})`}
           </label>
           <IngredientEditor ingredients={ingredients} onChange={setIngredients} />
+        </div>
+
+        {/* Bereiding */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-terracotta)' }}>
+            Bereiding (optioneel) {steps.length > 0 && `(${steps.length} stappen)`}
+          </label>
+          <StepsEditor steps={steps} onChange={setSteps} />
         </div>
       </div>
 
