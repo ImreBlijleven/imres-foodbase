@@ -27,8 +27,8 @@ export function LoginScreen() {
     <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
       {/* Hero */}
       <div
-        className="flex flex-col items-center justify-center flex-shrink-0 pt-14 pb-10 px-6"
-        style={{ background: 'var(--c-espresso)' }}
+        className="flex flex-col items-center justify-center flex-shrink-0 pb-10 px-6"
+        style={{ background: 'var(--c-espresso)', paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}
       >
         <div
           className="flex items-center justify-center rounded-2xl mb-5"
@@ -49,7 +49,7 @@ export function LoginScreen() {
 
       {/* Form */}
       <div className="flex-1 flex flex-col justify-center px-6 pb-12">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm mx-auto">
           <div>
             <h2 className="font-serif-display text-2xl mb-1" style={{ color: 'var(--c-espresso)' }}>
               Inloggen

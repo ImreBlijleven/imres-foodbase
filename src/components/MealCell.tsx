@@ -96,8 +96,8 @@ export function MealCell({ meal, onUpdate }: Props) {
           />
           {/* sheet — sits just above the keyboard via Visual Viewport offset */}
           <div
-            className="absolute left-0 right-0 bg-white rounded-t-2xl shadow-2xl px-4 pt-4 pb-6"
-            style={{ bottom: keyboardBottom, pointerEvents: 'auto' }}
+            className="absolute left-0 right-0 bg-white rounded-t-2xl shadow-2xl px-4 pt-4"
+            style={{ bottom: keyboardBottom, pointerEvents: 'auto', paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
           >
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
             <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--c-terracotta)' }}>

@@ -20,7 +20,7 @@ interface Props {
 type View = 'list' | 'add' | 'detail';
 
 const Header = ({ onBack, title, right }: { onBack: () => void; title: string; right?: ReactNode }) => (
-  <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+  <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
     <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70">
       <BackArrow />
     </button>
@@ -93,7 +93,7 @@ export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode
           }
         />
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 space-y-5 content-narrow">
           {/* Naam */}
           <div className="bg-white rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
@@ -360,7 +360,7 @@ export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode
         }
       />
 
-      <div className="px-4 pt-3 pb-2 flex-shrink-0 space-y-2" style={{ background: 'var(--c-espresso)' }}>
+      <div className="px-4 pt-3 pb-2 flex-shrink-0 space-y-2 content-narrow" style={{ background: 'var(--c-espresso)' }}>
         <input
           className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
           style={{ background: 'rgba(253,240,232,0.12)', color: 'var(--c-cream)', caretColor: 'var(--c-cream)' }}
@@ -384,7 +384,7 @@ export function RecipeLibraryScreen({ onBack, userId, onSelectRecipe, selectMode
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 content-narrow">
         {filtered.length === 0 && (
           <div className="text-center py-12">
             <p className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.6 }}>

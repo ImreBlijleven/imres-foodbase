@@ -13,7 +13,8 @@ export function MealTypeSheet({ onSelect, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full bg-white rounded-t-2xl p-4 pb-8 shadow-2xl"
+        className="w-full bg-white rounded-t-2xl p-4 shadow-2xl"
+        style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />

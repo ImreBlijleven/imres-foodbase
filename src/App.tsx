@@ -84,7 +84,7 @@ function WeekScreen({ userId, onHome }: { userId: string; onHome: () => void }) 
 
   return (
     <div className="flex flex-col h-svh" style={{ background: 'var(--c-cream)' }}>
-      <div className="px-4 py-3 flex items-center gap-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+      <div className="px-4 py-3 safe-top-bar flex items-center gap-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
         <button
           onClick={onHome}
           className="flex items-center justify-center rounded-full active:opacity-70"

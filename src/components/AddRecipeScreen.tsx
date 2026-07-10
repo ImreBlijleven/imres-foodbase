@@ -167,7 +167,7 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+      <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
         <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="text-xl active:opacity-70">←</button>
         <h1 className="font-serif-display text-lg" style={{ color: 'var(--c-cream)' }}>Recept toevoegen</h1>
       </div>
@@ -188,7 +188,7 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 content-narrow">
         {/* Import controls */}
         {tab === 'website' && (
           <div className="space-y-2">
@@ -405,7 +405,7 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
       </div>
 
       {/* Save */}
-      <div className="p-4 flex-shrink-0 bg-white" style={{ borderTop: '1px solid var(--c-cream-dark)' }}>
+      <div className="p-4 safe-bottom-bar content-narrow flex-shrink-0 bg-white" style={{ borderTop: '1px solid var(--c-cream-dark)' }}>
         <button
           onClick={handleSave}
           disabled={!name.trim()}

@@ -126,12 +126,12 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   if (!choicesDone) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+        <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
           <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
           <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         </div>
         <WeekOverview weekPlan={weekPlan} />
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 content-narrow">
           <p className="text-sm" style={{ color: 'var(--c-espresso)', opacity: 0.7 }}>Voor welke maaltijden neem jij de boodschappen mee?</p>
           {needChoice.map(({ meal, date }) => {
             const dayIndex = weekPlan.days.findIndex((d) => d.date === date);
@@ -204,7 +204,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
             );
           })}
         </div>
-        <div className="p-4">
+        <div className="p-4 safe-bottom-bar">
           <button
             onClick={() => setChoicesDone(true)}
             className="w-full py-3 font-semibold rounded-xl active:opacity-80 text-white"
@@ -220,7 +220,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   if (!generated) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+        <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
           <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
           <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         </div>
@@ -245,7 +245,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+      <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
         <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
         <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
         <button
@@ -261,7 +261,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
       <WeekOverview weekPlan={weekPlan} />
       <MealCountSummary counts={mealCounts} />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 content-narrow">
         {unchecked.map((item) => (
           <div
             key={item.id}
@@ -316,7 +316,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
 
       {!supermarktMode && (
         <div className="border-t border-gray-100 bg-white flex-shrink-0">
-          <form onSubmit={handleAddItem} className="p-4 pb-2 flex gap-2">
+          <form onSubmit={handleAddItem} className="p-4 pb-2 flex gap-2 content-narrow">
             <input
               className="flex-1 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2"
               style={{ borderColor: 'var(--c-cream-dark)', '--tw-ring-color': 'var(--c-forest)' } as React.CSSProperties}
@@ -332,7 +332,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
               +
             </button>
           </form>
-          <div className="px-4 pb-4">
+          <div className="px-4 pb-4 safe-bottom-bar content-narrow">
             <button
               onClick={() => setShowRecipePicker(true)}
               className="w-full py-2.5 text-sm font-medium rounded-xl active:opacity-80 flex items-center justify-center gap-2"

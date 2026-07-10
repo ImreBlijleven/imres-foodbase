@@ -103,7 +103,7 @@ export function IngredientPickerSheet({ recipe, onAdd, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 flex-shrink-0">
+        <div className="p-4 safe-bottom-bar border-t border-gray-100 flex-shrink-0">
           <button
             onClick={handleAdd}
             disabled={selected.size === 0}
