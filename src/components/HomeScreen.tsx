@@ -1,120 +1,101 @@
-import { BowlIcon } from './icons';
-
 interface Props {
   onNavigate: (screen: 'week' | 'recipes' | 'shopping') => void;
 }
 
-const NAV_ITEMS = [
+const CalendarArt = () => (
+  <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+    <rect x="9" y="13" width="46" height="42" rx="6" stroke="currentColor" strokeWidth="2" />
+    <path d="M9 25h46" stroke="currentColor" strokeWidth="2" />
+    <path d="M21 7v11M43 7v11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="21" cy="34" r="2" fill="currentColor" />
+    <circle cx="32" cy="34" r="2" fill="currentColor" />
+    <circle cx="43" cy="34" r="2" fill="currentColor" />
+    <circle cx="21" cy="45" r="2" fill="currentColor" />
+    <circle cx="32" cy="45" r="2" fill="currentColor" />
+  </svg>
+);
+
+const BookArt = () => (
+  <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+    <path d="M32 16c-6-4.5-14-5.5-21-3v37c7-2.5 15-1.5 21 3 6-4.5 14-5.5 21-3V13c-7-2.5-15-1.5-21 3z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M32 16v37" stroke="currentColor" strokeWidth="2" />
+    <path d="M17 22c3-.8 7-.8 10 .5M17 30c3-.8 7-.8 10 .5M37 22c3-1.3 7-1.3 10-.5M37 30c3-1.3 7-1.3 10-.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
+
+const BasketArt = () => (
+  <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+    <path d="M11 26h42l-4.5 25a4 4 0 01-4 3h-25a4 4 0 01-4-3L11 26z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M22 26l10-15 10 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M24 34v10M32 34v10M40 34v10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const Chevron = () => (
+  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.55 }}>
+    <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const COLUMNS = [
   {
     key: 'week' as const,
-    label: 'Rooster',
-    sub: 'Weekplanning & maaltijden',
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="3" y="5" width="22" height="20" rx="3" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M3 11h22" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 3v4M19 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M8 16h4M16 16h4M8 20h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-    accent: '#2D4A3E',
-    accentLight: 'rgba(45,74,62,0.08)',
+    label: 'Weekplanning',
+    bg: 'var(--c-forest)',
+    fg: '#FDF0E8',
+    icon: <CalendarArt />,
   },
   {
     key: 'recipes' as const,
     label: 'Recepten',
-    sub: 'Bibliotheek & AI-import',
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M5 22l-.5-16a2 2 0 012-2h15a2 2 0 012 2l-.5 16a2 2 0 01-2 2H7a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M10 9h8M10 13h6M10 17h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-    accent: '#9F5E45',
-    accentLight: 'rgba(159,94,69,0.08)',
+    bg: 'var(--c-terracotta)',
+    fg: '#FDF0E8',
+    icon: <BookArt />,
   },
   {
     key: 'shopping' as const,
     label: 'Boodschappen',
-    sub: 'Lijstjes & weekoverzicht',
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M6 7h16l-2 13a2 2 0 01-2 2H10a2 2 0 01-2-2L6 7z" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M4 7h20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M11 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M11 13l1.5 1.5L15 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    accent: '#1E0E07',
-    accentLight: 'rgba(30,14,7,0.06)',
+    bg: 'var(--c-cream)',
+    fg: 'var(--c-forest)',
+    icon: <BasketArt />,
   },
 ];
 
 export function HomeScreen({ onNavigate }: Props) {
   return (
-    <div
-      className="flex flex-col h-svh"
-      style={{ background: 'var(--c-cream)' }}
-    >
-      {/* Hero */}
+    <div className="flex flex-col h-svh">
+      {/* Hero met logo-badge */}
       <div
-        className="flex flex-col items-center justify-center flex-shrink-0 pt-12 pb-8 px-6"
+        className="flex flex-col items-center flex-shrink-0 pt-10 pb-6"
         style={{ background: 'var(--c-espresso)' }}
       >
         <div
-          className="flex items-center justify-center rounded-2xl mb-5"
-          style={{ width: 72, height: 72, background: 'var(--c-forest)' }}
+          className="rounded-full overflow-hidden flex items-center justify-center"
+          style={{ width: 116, height: 116, background: 'var(--c-cream)' }}
         >
-          <BowlIcon size={44} color="#FDF0E8" />
+          <img
+            src="/icon-192.png"
+            alt="Imre's Foodbase"
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
         </div>
-        <h1
-          className="font-serif-display text-4xl text-center mb-2 leading-tight"
-          style={{ color: 'var(--c-cream)' }}
-        >
-          Imre's Foodbase
-        </h1>
-        <p
-          className="text-xs tracking-widest font-medium"
-          style={{ color: 'var(--c-terracotta)', letterSpacing: '0.18em' }}
-        >
-          PLAN, PLAN, PLAN
-        </p>
       </div>
 
-      {/* Nav cards */}
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-8 space-y-3">
-        {NAV_ITEMS.map((item) => (
+      {/* Drie navigatiekolommen */}
+      <div className="flex flex-1 min-h-0">
+        {COLUMNS.map((col) => (
           <button
-            key={item.key}
-            onClick={() => onNavigate(item.key)}
-            className="w-full flex items-center gap-4 text-left rounded-2xl px-5 py-5 active:scale-[0.98] transition-transform"
-            style={{
-              background: 'white',
-              border: '0.5px solid var(--c-cream-dark)',
-            }}
+            key={col.key}
+            onClick={() => onNavigate(col.key)}
+            className="flex-1 flex flex-col items-center justify-center gap-5 px-1.5 active:opacity-85 transition-opacity"
+            style={{ background: col.bg, color: col.fg }}
           >
-            <div
-              className="flex items-center justify-center rounded-xl flex-shrink-0"
-              style={{
-                width: 52,
-                height: 52,
-                background: item.accentLight,
-                color: item.accent,
-              }}
-            >
-              {item.icon}
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-base" style={{ color: 'var(--c-espresso)' }}>
-                {item.label}
-              </p>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--c-terracotta)', opacity: 0.8 }}>
-                {item.sub}
-              </p>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: 'var(--c-cream-dark)', flexShrink: 0 }}>
-              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {col.icon}
+            <span className="font-serif-display text-[15px] leading-tight text-center">
+              {col.label}
+            </span>
+            <Chevron />
           </button>
         ))}
       </div>
