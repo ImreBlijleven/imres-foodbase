@@ -2,36 +2,14 @@ interface Props {
   onNavigate: (screen: 'week' | 'recipes' | 'shopping') => void;
 }
 
-/* Badge: lijn-art soepkom met lepel, krullende stoom en gebogen merknaam */
+/* Merkbadge — uitgesneden uit het aangeleverde logobestand */
 const LogoBadge = () => (
-  <svg viewBox="0 0 200 200" fill="none" className="w-full h-full">
-    <circle cx="100" cy="100" r="100" fill="#FDF0E8" />
-    <g stroke="#9F5E45" strokeLinecap="round" fill="none">
-      {/* Stoom met krul */}
-      <path d="M97 52C88 42 100 38 95 28C91 20 100 14 106 18C112 22 106 30 100 26" strokeWidth="1.8" />
-      {/* Kom: rand + buik */}
-      <ellipse cx="98" cy="64" rx="34" ry="8" strokeWidth="2" />
-      <path d="M64 65C66 86 80 97 98 97C116 97 130 86 132 65" strokeWidth="2" />
-      {/* Stukjes in de soep */}
-      <rect x="80" y="58" width="10" height="7" rx="3" strokeWidth="1.5" />
-      <rect x="95" y="62" width="11" height="7" rx="3" strokeWidth="1.5" />
-      <rect x="108" y="57" width="9" height="6" rx="3" strokeWidth="1.5" />
-      {/* Lepel rechts */}
-      <path d="M138 44C146 52 150 62 148 72" strokeWidth="2" />
-      <ellipse cx="146" cy="82" rx="8" ry="11" strokeWidth="2" transform="rotate(-12 146 82)" />
-    </g>
-    {/* Gebogen merknaam */}
-    <path id="badge-arc" d="M 26 96 Q 100 186 174 96" fill="none" />
-    <text
-      fontSize="24"
-      fill="#9F5E45"
-      style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
-    >
-      <textPath href="#badge-arc" startOffset="50%" textAnchor="middle">
-        Imre&#39;s Foodbase
-      </textPath>
-    </text>
-  </svg>
+  <img
+    src="/badge.png"
+    alt="Imre's Foodbase"
+    className="w-full h-full rounded-full object-cover"
+    draggable={false}
+  />
 );
 
 const CalendarArt = () => (
