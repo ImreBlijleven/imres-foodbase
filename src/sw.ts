@@ -1,6 +1,15 @@
-import { precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 
 declare let self: ServiceWorkerGlobalScope;
+
+// Nieuwe versie direct activeren — zonder dit blijft iOS de oude versie tonen
+// totdat de PWA volledig is afgesloten
+self.skipWaiting();
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+cleanupOutdatedCaches();
 
 // Injected by vite-plugin-pwa
 precacheAndRoute(self.__WB_MANIFEST);
