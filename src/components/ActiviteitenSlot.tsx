@@ -8,6 +8,7 @@ interface Props {
   onAdd: (text: string) => void;
   onUpdate: (id: string, text: string) => void;
   onRemove: (id: string) => void;
+  large?: boolean;
 }
 
 interface SheetState {
@@ -16,7 +17,7 @@ interface SheetState {
   text: string;
 }
 
-export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove, position: _position }: Props) {
+export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove, position: _position, large }: Props) {
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const keyboardBottom = useKeyboardBottom(sheet !== null);
@@ -55,14 +56,18 @@ export function ActiviteitenSlot({ items, onAdd, onUpdate, onRemove, position: _
           <button
             key={item.id}
             onClick={() => openEdit(item)}
-            className="w-full text-left text-[10px] text-gray-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 leading-snug truncate active:bg-amber-100"
+            className={`w-full text-left text-gray-600 bg-amber-50 border border-amber-200 rounded leading-snug truncate active:bg-amber-100 ${
+              large ? 'text-xs px-2 py-1' : 'text-[10px] px-1.5 py-0.5'
+            }`}
           >
             {item.text}
           </button>
         ))}
         <button
           onClick={openAdd}
-          className="w-full text-[10px] text-gray-300 hover:text-gray-400 text-center leading-none py-0.5"
+          className={`w-full text-gray-300 hover:text-gray-400 text-center leading-none ${
+            large ? 'text-[11px] py-1' : 'text-[10px] py-0.5'
+          }`}
         >
           + activiteit
         </button>

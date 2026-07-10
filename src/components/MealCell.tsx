@@ -9,9 +9,10 @@ import { useKeyboardBottom } from '../hooks/useKeyboardBottom';
 interface Props {
   meal: Meal | null;
   onUpdate: (meal: Meal | null) => void;
+  large?: boolean;
 }
 
-export function MealCell({ meal, onUpdate }: Props) {
+export function MealCell({ meal, onUpdate, large }: Props) {
   const [showSheet, setShowSheet] = useState(false);
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(meal?.label ?? '');
@@ -66,7 +67,7 @@ export function MealCell({ meal, onUpdate }: Props) {
   return (
     <>
       <div
-        className="relative min-h-[52px] rounded-lg flex items-center justify-center cursor-pointer select-none active:opacity-80 transition-opacity px-1"
+        className={`relative rounded-lg flex items-center justify-center cursor-pointer select-none active:opacity-80 transition-opacity px-1 ${large ? 'min-h-[56px]' : 'min-h-[52px]'}`}
         style={{ backgroundColor: bgColor }}
         onClick={handleTap}
         onPointerDown={onPointerDown}
@@ -74,7 +75,7 @@ export function MealCell({ meal, onUpdate }: Props) {
         onPointerLeave={onPointerUp}
       >
         {meal ? (
-          <span className="text-xs font-medium text-white text-center leading-tight px-0.5">
+          <span className={`${large ? 'text-sm' : 'text-xs'} font-medium text-white text-center leading-tight px-0.5`}>
             {meal.label || MEAL_TYPE_CONFIG[meal.type].label}
           </span>
         ) : (
