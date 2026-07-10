@@ -67,7 +67,7 @@ export function LoginScreen() {
               type="text"
               required
               autoComplete="username"
-              placeholder="imre"
+              placeholder="Gebruikersnaam"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-white border rounded-xl px-4 py-3.5 text-base focus:outline-none transition-colors"
