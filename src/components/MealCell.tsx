@@ -9,10 +9,9 @@ import { useKeyboardBottom } from '../hooks/useKeyboardBottom';
 interface Props {
   meal: Meal | null;
   onUpdate: (meal: Meal | null) => void;
-  large?: boolean;
 }
 
-export function MealCell({ meal, onUpdate, large }: Props) {
+export function MealCell({ meal, onUpdate }: Props) {
   const [showSheet, setShowSheet] = useState(false);
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(meal?.label ?? '');
@@ -67,7 +66,7 @@ export function MealCell({ meal, onUpdate, large }: Props) {
   return (
     <>
       <div
-        className={`relative rounded-lg flex items-center justify-center cursor-pointer select-none active:opacity-80 transition-opacity px-1 ${large ? 'min-h-[56px]' : 'min-h-[52px]'}`}
+        className="relative min-h-[52px] h-full rounded-lg flex items-center justify-center cursor-pointer select-none active:opacity-80 transition-opacity px-1"
         style={{ backgroundColor: bgColor }}
         onClick={handleTap}
         onPointerDown={onPointerDown}
@@ -75,11 +74,11 @@ export function MealCell({ meal, onUpdate, large }: Props) {
         onPointerLeave={onPointerUp}
       >
         {meal ? (
-          <span className={`${large ? 'text-sm' : 'text-xs'} font-medium text-white text-center leading-tight px-0.5`}>
+          <span className="text-xs sm:text-sm font-medium text-white text-center leading-tight px-0.5">
             {meal.label || MEAL_TYPE_CONFIG[meal.type].label}
           </span>
         ) : (
-          <span className="text-lg leading-none" style={{ color: 'var(--c-terracotta)', opacity: 0.4 }}>+</span>
+          <span className="text-lg sm:text-xl leading-none" style={{ color: 'var(--c-terracotta)', opacity: 0.4 }}>+</span>
         )}
       </div>
 
