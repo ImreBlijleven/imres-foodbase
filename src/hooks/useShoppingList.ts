@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { ShoppingList, ShoppingItem, WeekPlan } from '../types';
+import type { ShoppingList, ShoppingItem, ShoppingCategory, WeekPlan } from '../types';
 import { MEAL_TYPE_CONFIG } from '../types';
 import { generateId } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -118,5 +118,15 @@ export function useShoppingList(weekPlanId: string, userId: string) {
     [mutate]
   );
 
-  return { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems };
+  const applyCategories = useCallback(
+    (categories: Record<string, ShoppingCategory>) => {
+      mutate((list) => ({
+        ...list,
+        items: list.items.map((i) => ({ ...i, category: categories[i.name] ?? i.category })),
+      }));
+    },
+    [mutate]
+  );
+
+  return { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems, applyCategories };
 }

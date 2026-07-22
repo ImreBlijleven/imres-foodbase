@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import type { WeekPlan, Meal, Recipe } from '../types';
-import { MEAL_TYPE_CONFIG } from '../types';
+import type { WeekPlan, Meal, Recipe, ShoppingItem } from '../types';
+import { MEAL_TYPE_CONFIG, SHOPPING_CATEGORIES } from '../types';
 import { DAY_NAMES, formatDate } from '../utils';
 import { useShoppingList } from '../hooks/useShoppingList';
+import { categorizeShoppingItems } from '../lib/gemini';
 import { WeekOverview } from './WeekOverview';
 import { RecipeLibraryScreen } from './RecipeLibraryScreen';
 import { IngredientPickerSheet } from './IngredientPickerSheet';
@@ -75,6 +76,18 @@ interface Props {
   onBack: () => void;
 }
 
+function groupItems(items: ShoppingItem[]): { category: string; items: ShoppingItem[] }[] {
+  const map = new Map<string, ShoppingItem[]>();
+  for (const item of items) {
+    const cat = item.category ?? 'Overig';
+    if (!map.has(cat)) map.set(cat, []);
+    map.get(cat)!.push(item);
+  }
+  return SHOPPING_CATEGORIES
+    .filter((c) => map.has(c))
+    .map((c) => ({ category: c, items: map.get(c)! }));
+}
+
 function collectMealsNeedingChoice(weekPlan: WeekPlan) {
   const meals: { meal: Meal; date: string; slot: string }[] = [];
   for (const day of weekPlan.days) {
@@ -90,7 +103,7 @@ function collectMealsNeedingChoice(weekPlan: WeekPlan) {
 }
 
 export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
-  const { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems } =
+  const { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems, applyCategories } =
     useShoppingList(weekPlan.id, userId);
 
   const [generated, setGenerated] = useState(false);
@@ -99,6 +112,26 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   const [showRecipePicker, setShowRecipePicker] = useState(false);
   const [pickedRecipe, setPickedRecipe] = useState<Recipe | null>(null);
   const [mealCounts, setMealCounts] = useState<SlotBreakdown[]>([]);
+  const [groupByCategory, setGroupByCategory] = useState(false);
+  const [categorizing, setCategorizing] = useState(false);
+
+  async function handleCategorySort() {
+    if (groupByCategory) { setGroupByCategory(false); return; }
+    const names = [...new Set(shoppingList.items.map((i) => i.name))];
+    const needsCategory = shoppingList.items.some((i) => !i.category);
+    if (names.length > 0 && needsCategory) {
+      setCategorizing(true);
+      try {
+        const categories = await categorizeShoppingItems(names);
+        applyCategories(categories);
+      } catch {
+        // stil falen — items zonder categorie vallen onder "Overig"
+      } finally {
+        setCategorizing(false);
+      }
+    }
+    setGroupByCategory(true);
+  }
 
   // Samen/custom choices
   const needChoice = collectMealsNeedingChoice(weekPlan);
@@ -122,6 +155,28 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
 
   const unchecked = shoppingList.items.filter((i) => !i.checked);
   const checked = shoppingList.items.filter((i) => i.checked);
+  const uncheckedGroups = groupByCategory ? groupItems(unchecked) : null;
+
+  function renderRow(item: ShoppingItem) {
+    return (
+      <div
+        key={item.id}
+        className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm"
+      >
+        <button
+          onClick={() => toggleItem(item.id)}
+          className="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0 flex items-center justify-center active:scale-95 transition-transform"
+        />
+        <span className="flex-1 text-sm text-gray-800">
+          {item.amount && item.unit ? `${item.amount} ${item.unit} ` : item.amount ? `${item.amount} ` : ''}
+          {item.name}
+        </span>
+        {!supermarktMode && (
+          <button onClick={() => removeItem(item.id)} className="text-gray-300 text-lg leading-none">×</button>
+        )}
+      </div>
+    );
+  }
 
   if (!choicesDone) {
     return (
@@ -261,25 +316,32 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
       <WeekOverview weekPlan={weekPlan} />
       <MealCountSummary counts={mealCounts} />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 content-narrow">
-        {unchecked.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm"
+      {shoppingList.items.length > 0 && (
+        <div className="px-4 pt-2 content-narrow flex justify-end">
+          <button
+            onClick={handleCategorySort}
+            disabled={categorizing}
+            className="text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1.5 disabled:opacity-60"
+            style={groupByCategory
+              ? { background: 'var(--c-forest)', color: 'var(--c-cream)' }
+              : { background: 'white', color: 'var(--c-forest)', border: '1px solid var(--c-forest)' }}
           >
-            <button
-              onClick={() => toggleItem(item.id)}
-              className="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0 flex items-center justify-center active:scale-95 transition-transform"
-            />
-            <span className="flex-1 text-sm text-gray-800">
-              {item.amount && item.unit ? `${item.amount} ${item.unit} ` : item.amount ? `${item.amount} ` : ''}
-              {item.name}
-            </span>
-            {!supermarktMode && (
-              <button onClick={() => removeItem(item.id)} className="text-gray-300 text-lg leading-none">×</button>
-            )}
-          </div>
-        ))}
+            {categorizing ? 'Sorteren…' : groupByCategory ? '✓ Op categorie' : 'Sorteer op categorie'}
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 content-narrow">
+        {uncheckedGroups
+          ? uncheckedGroups.map((group) => (
+              <div key={group.category} className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide pt-2 pb-0.5" style={{ color: 'var(--c-terracotta)' }}>
+                  {group.category}
+                </p>
+                {group.items.map(renderRow)}
+              </div>
+            ))
+          : unchecked.map(renderRow)}
 
         {checked.length > 0 && (
           <>

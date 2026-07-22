@@ -68,6 +68,23 @@ export interface Recipe {
   instructions?: string[];    // bereidingsstappen
 }
 
+export const SHOPPING_CATEGORIES = [
+  'Groente & fruit',
+  'Vlees & vis',
+  'Zuivel & eieren',
+  'Kaas & vleeswaren',
+  'Brood & banket',
+  'Pasta, rijst & granen',
+  'Conserven & sauzen',
+  'Kruiden & specerijen',
+  'Diepvries',
+  'Snacks & snoep',
+  'Dranken',
+  'Non-food',
+  'Overig',
+] as const;
+export type ShoppingCategory = (typeof SHOPPING_CATEGORIES)[number];
+
 export interface ShoppingItem {
   id: string;
   name: string;
@@ -75,6 +92,7 @@ export interface ShoppingItem {
   unit: string | null;
   checked: boolean;
   source: 'generated' | 'manual';
+  category?: ShoppingCategory;
 }
 
 export interface ShoppingList {

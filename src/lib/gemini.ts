@@ -1,5 +1,5 @@
-import type { Ingredient, RecipeCategory } from '../types';
-import { RECIPE_CATEGORIES } from '../types';
+import type { Ingredient, RecipeCategory, ShoppingCategory } from '../types';
+import { RECIPE_CATEGORIES, SHOPPING_CATEGORIES } from '../types';
 import { generateId } from '../utils';
 
 const INTERNAL_TOKEN = import.meta.env.VITE_FOODBASE_INTERNAL_TOKEN as string | undefined;
@@ -175,5 +175,37 @@ export async function fetchInstagram(url: string): Promise<ExtractedRecipe> {
     return await extractFromText(text);
   } catch {
     throw new Error('instagram_fallback');
+  }
+}
+
+const CATEGORIZE_PROMPT = (names: string[]) => `
+Je krijgt een lijst met boodschappen. Geef voor elk item de supermarktcategorie waarin het normaal ligt.
+Kies voor elk item precies één van deze categorieën: ${SHOPPING_CATEGORIES.join(', ')}.
+Antwoord als één JSON-object waarbij de sleutel exact het item is en de waarde de categorie:
+{ "melk": "Zuivel & eieren", "ui": "Groente & fruit" }
+Gebruik "Overig" als je twijfelt. Geef alleen de JSON terug, geen uitleg, geen markdown.
+
+Boodschappen:
+${names.map((n) => `- ${n}`).join('\n')}
+`;
+
+export async function categorizeShoppingItems(names: string[]): Promise<Record<string, ShoppingCategory>> {
+  if (names.length === 0) return {};
+  const raw = await callProxy(CATEGORIZE_PROMPT(names));
+  const cleaned = raw.replace(/```(?:json)?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) return {};
+  try {
+    const obj = JSON.parse(match[0]) as Record<string, unknown>;
+    const valid = new Set<string>(SHOPPING_CATEGORIES);
+    const result: Record<string, ShoppingCategory> = {};
+    for (const [name, cat] of Object.entries(obj)) {
+      if (typeof cat === 'string' && valid.has(cat)) {
+        result[name] = cat as ShoppingCategory;
+      }
+    }
+    return result;
+  } catch {
+    return {};
   }
 }
