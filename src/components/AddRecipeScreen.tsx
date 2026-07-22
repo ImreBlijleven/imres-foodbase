@@ -4,7 +4,13 @@ import { RECIPE_CATEGORIES } from '../types';
 import { IngredientEditor } from './IngredientEditor';
 import { StepsEditor } from './StepsEditor';
 import type { ExtractedRecipe } from '../lib/gemini';
-import { extractFromText, extractFromImage, fetchAndExtract, fetchInstagram } from '../lib/gemini';
+import { extractFromText, extractFromImages, fetchAndExtract, fetchInstagram } from '../lib/gemini';
+
+interface Photo {
+  preview: string;
+  base64: string;
+  mimeType: string;
+}
 
 type Tab = 'handmatig' | 'website' | 'instagram' | 'screenshot';
 
@@ -41,9 +47,11 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
   const [instagramFallback, setInstagramFallback] = useState(false);
   const [captionText, setCaptionText] = useState('');
 
-  // Shared image (via Web Share Target)
-  const [sharedPreview, setSharedPreview] = useState<string | null>(
-    initialImage ? `data:${initialImage.mimeType};base64,${initialImage.base64}` : null
+  // Foto's (via bestand kiezen of Web Share Target)
+  const [photos, setPhotos] = useState<Photo[]>(
+    initialImage
+      ? [{ preview: `data:${initialImage.mimeType};base64,${initialImage.base64}`, base64: initialImage.base64, mimeType: initialImage.mimeType }]
+      : []
   );
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -61,7 +69,7 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
   useEffect(() => {
     if (initialImage && ingredients.length === 0) {
       setLoading(true);
-      extractFromImage(initialImage.base64, initialImage.mimeType)
+      extractFromImages([{ base64: initialImage.base64, mimeType: initialImage.mimeType }])
         .then(applyExtracted)
         .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Fout bij verwerking.'))
         .finally(() => setLoading(false));
@@ -140,16 +148,45 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
     }
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLoading(true); setError('');
-    setSharedPreview(URL.createObjectURL(file));
+  async function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // zelfde bestand opnieuw kunnen kiezen
+    if (files.length === 0) return;
+    setLoading(true); setError(''); setNotReadable(false);
     try {
-      const base64 = await resizeAndCompress(file);
-      const result = await extractFromImage(base64, 'image/jpeg');
+      const processed: Photo[] = await Promise.all(
+        files.map(async (file) => ({
+          preview: URL.createObjectURL(file),
+          base64: await resizeAndCompress(file),
+          mimeType: 'image/jpeg',
+        }))
+      );
+      const allPhotos = [...photos, ...processed];
+      setPhotos(allPhotos);
+      const result = await extractFromImages(
+        allPhotos.map((p) => ({ base64: p.base64, mimeType: p.mimeType }))
+      );
       applyExtracted(result);
-      if (!name && !result.title) setName(file.name.replace(/\.[^.]+$/, ''));
+      if (!name && !result.title) setName(files[0].name.replace(/\.[^.]+$/, ''));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Fout bij verwerking.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function reExtractPhotos() {
+    if (photos.length === 0) return;
+    setLoading(true); setError(''); setNotReadable(false);
+    try {
+      const result = await extractFromImages(
+        photos.map((p) => ({ base64: p.base64, mimeType: p.mimeType }))
+      );
+      applyExtracted(result);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Fout bij verwerking.');
     } finally {
@@ -262,20 +299,43 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
 
         {tab === 'screenshot' && (
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Foto van recept</label>
-            {sharedPreview ? (
-              <div className="relative rounded-xl overflow-hidden">
-                <img src={sharedPreview} alt="Gedeelde foto" className="w-full object-cover max-h-48 rounded-xl" />
-                <button
-                  onClick={() => { setSharedPreview(null); fileRef.current?.click(); }}
-                  className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-lg"
-                >
-                  Vervangen
-                </button>
-                {loading && (
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-xl">
-                    <span className="text-white text-sm font-medium">Verwerken…</span>
-                  </div>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Foto's van recept</label>
+            {photos.length > 0 ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {photos.map((photo, i) => (
+                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
+                      <img src={photo.preview} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removePhoto(i)}
+                        disabled={loading}
+                        aria-label="Foto verwijderen"
+                        className="absolute top-1 right-1 w-6 h-6 bg-black/55 text-white rounded-full flex items-center justify-center text-sm leading-none active:opacity-80 disabled:opacity-40"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={loading}
+                    className="aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 active:opacity-80 disabled:opacity-40"
+                    style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-terracotta)', opacity: 0.75 }}
+                  >
+                    <span className="text-2xl leading-none">+</span>
+                    <span className="text-[11px]">Meer</span>
+                  </button>
+                </div>
+                {loading ? (
+                  <p className="text-sm text-center" style={{ color: 'var(--c-terracotta)' }}>Foto's verwerken…</p>
+                ) : (
+                  <button
+                    onClick={reExtractPhotos}
+                    className="w-full py-2.5 rounded-xl text-sm font-medium active:opacity-80"
+                    style={{ border: '1px solid var(--c-forest)', color: 'var(--c-forest)' }}
+                  >
+                    Opnieuw uitlezen ({photos.length} foto{photos.length !== 1 ? "'s" : ''})
+                  </button>
                 )}
               </div>
             ) : (
@@ -286,15 +346,17 @@ export function AddRecipeScreen({ onSave, onBack, initialImage, initialUrl }: Pr
                 style={{ borderColor: 'var(--c-cream-dark)', color: 'var(--c-terracotta)', opacity: 0.7 }}
               >
                 <span className="text-3xl">📷</span>
-                <span>{loading ? 'Verwerken…' : 'Tik om foto te kiezen'}</span>
+                <span>{loading ? 'Verwerken…' : "Tik om foto's te kiezen"}</span>
+                <span className="text-xs" style={{ opacity: 0.8 }}>Meerdere pagina's? Kies ze in één keer.</span>
               </button>
             )}
             <input
               ref={fileRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
-              onChange={handleFileChange}
+              onChange={handleFilesChange}
             />
           </div>
         )}

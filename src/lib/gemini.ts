@@ -34,6 +34,20 @@ async function callProxy(prompt: string, imageBase64?: string, mimeType?: string
   return data.text ?? '';
 }
 
+async function callProxyImages(prompt: string, images: { base64: string; mimeType: string }[]): Promise<string> {
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: proxyHeaders(),
+    body: JSON.stringify({ prompt, images }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string })?.error ?? `Fout: ${res.status}`);
+  }
+  const data = await res.json() as { text: string };
+  return data.text ?? '';
+}
+
 async function fetchUrlServerSide(url: string): Promise<{ text: string; title: string }> {
   const res = await fetch('/api/gemini', {
     method: 'POST',
@@ -126,6 +140,11 @@ Dit is een foto van een recept of ingrediëntenlijst.
 ${RULES}
 `;
 
+const MULTI_SCREENSHOT_PROMPT = `
+Dit zijn meerdere foto's van hetzelfde recept. De informatie kan over de foto's verdeeld zijn (bijvoorbeeld de ingrediëntenlijst op de ene foto en de bereiding op de andere, of een lange lijst die doorloopt). Combineer alle foto's tot één volledig recept zonder dingen dubbel te tellen.
+${RULES}
+`;
+
 export async function extractFromText(text: string): Promise<ExtractedRecipe> {
   const raw = await callProxy(EXTRACT_PROMPT(text));
   return parseRecipe(raw);
@@ -133,6 +152,13 @@ export async function extractFromText(text: string): Promise<ExtractedRecipe> {
 
 export async function extractFromImage(base64: string, mimeType: string): Promise<ExtractedRecipe> {
   const raw = await callProxy(SCREENSHOT_PROMPT, base64, mimeType);
+  return parseRecipe(raw);
+}
+
+export async function extractFromImages(images: { base64: string; mimeType: string }[]): Promise<ExtractedRecipe> {
+  if (images.length === 0) return EMPTY_RESULT;
+  if (images.length === 1) return extractFromImage(images[0].base64, images[0].mimeType);
+  const raw = await callProxyImages(MULTI_SCREENSHOT_PROMPT, images);
   return parseRecipe(raw);
 }
 

@@ -32,10 +32,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'FOODBASE_GEMINI_API_KEY niet ingesteld op de server.' });
   }
 
-  const { prompt, imageBase64, mimeType, fetchUrl } = req.body as {
+  const { prompt, imageBase64, mimeType, images, fetchUrl } = req.body as {
     prompt: string;
     imageBase64?: string;
     mimeType?: string;
+    images?: { base64: string; mimeType: string }[];
     fetchUrl?: string;
   };
 
@@ -63,7 +64,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const parts: object[] = [{ text: prompt }];
-  if (imageBase64 && mimeType) {
+  if (Array.isArray(images) && images.length > 0) {
+    for (const img of images) {
+      if (img?.base64 && img?.mimeType) {
+        parts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } });
+      }
+    }
+  } else if (imageBase64 && mimeType) {
     parts.push({ inlineData: { mimeType, data: imageBase64 } });
   }
 
