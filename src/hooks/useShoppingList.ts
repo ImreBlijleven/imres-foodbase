@@ -4,19 +4,32 @@ import { MEAL_TYPE_CONFIG } from '../types';
 import { generateId } from '../utils';
 import { supabase } from '../lib/supabase';
 
-async function fetchList(weekId: string, userId: string): Promise<ShoppingList | null> {
+// Eén blijvende lijst per gebruiker, los van de week — blijft staan tot hij verwijderd wordt.
+const LIST_KEY = 'current';
+
+async function fetchList(userId: string): Promise<ShoppingList | null> {
   const { data } = await supabase
     .from('shopping_lists')
     .select('data')
-    .eq('week_id', weekId)
+    .eq('week_id', LIST_KEY)
     .eq('user_id', userId)
     .maybeSingle();
-  return data ? (data.data as ShoppingList) : null;
+  if (data) return data.data as ShoppingList;
+
+  // Overgang: neem de laatst bewerkte lijst van vóór de blijvende lijst over
+  const { data: latest } = await supabase
+    .from('shopping_lists')
+    .select('data')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return latest ? (latest.data as ShoppingList) : null;
 }
 
-async function saveList(weekId: string, userId: string, list: ShoppingList) {
+async function saveList(userId: string, list: ShoppingList) {
   await supabase.from('shopping_lists').upsert({
-    week_id: weekId,
+    week_id: LIST_KEY,
     user_id: userId,
     data: list,
     updated_at: new Date().toISOString(),
@@ -25,10 +38,12 @@ async function saveList(weekId: string, userId: string, list: ShoppingList) {
 
 export function useShoppingList(weekPlanId: string, userId: string) {
   const [shoppingList, setShoppingList] = useState<ShoppingList>({ weekPlanId, items: [] });
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetchList(weekPlanId, userId).then((list) => {
+    fetchList(userId).then((list) => {
       setShoppingList(list ?? { weekPlanId, items: [] });
+      setLoaded(true);
     });
   }, [weekPlanId, userId]);
 
@@ -36,11 +51,11 @@ export function useShoppingList(weekPlanId: string, userId: string) {
     (updater: (list: ShoppingList) => ShoppingList) => {
       setShoppingList((current) => {
         const updated = updater(current);
-        saveList(weekPlanId, userId, updated);
+        saveList(userId, updated);
         return updated;
       });
     },
-    [weekPlanId, userId]
+    [userId]
   );
 
   const generateFromWeekPlan = useCallback(
@@ -128,5 +143,9 @@ export function useShoppingList(weekPlanId: string, userId: string) {
     [mutate]
   );
 
-  return { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems, applyCategories };
+  const clearList = useCallback(() => {
+    mutate(() => ({ weekPlanId, items: [] }));
+  }, [weekPlanId, mutate]);
+
+  return { shoppingList, loaded, clearList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems, applyCategories };
 }

@@ -103,7 +103,7 @@ function collectMealsNeedingChoice(weekPlan: WeekPlan) {
 }
 
 export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
-  const { shoppingList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems, applyCategories } =
+  const { shoppingList, loaded, clearList, generateFromWeekPlan, toggleItem, addManualItem, removeItem, addRecipeItems, applyCategories } =
     useShoppingList(weekPlan.id, userId);
 
   const [generated, setGenerated] = useState(false);
@@ -145,6 +145,15 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
     setGenerated(true);
   }
 
+  function handleClearList() {
+    if (!window.confirm('Weet je zeker dat je de boodschappenlijst wilt verwijderen?')) return;
+    clearList();
+    setGenerated(false);
+    setChoicesDone(needChoice.length === 0);
+    setMealCounts([]);
+    setGroupByCategory(false);
+  }
+
   function handleAddItem(e: React.FormEvent) {
     e.preventDefault();
     if (newItem.trim()) {
@@ -178,7 +187,23 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
     );
   }
 
-  if (!choicesDone) {
+  const hasList = shoppingList.items.length > 0;
+
+  if (!loaded) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
+          <button onClick={onBack} style={{ color: 'var(--c-cream)' }} className="flex items-center justify-center w-8 h-8 rounded-full active:opacity-70"><BackArrow /></button>
+          <h1 className="font-serif-display text-lg flex-1" style={{ color: 'var(--c-cream)' }}>Boodschappenlijst</h1>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm" style={{ color: 'var(--c-terracotta)', opacity: 0.5 }}>Laden…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasList && !generated && !choicesDone) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
@@ -272,7 +297,7 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
     );
   }
 
-  if (!generated) {
+  if (!hasList && !generated) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 px-4 py-3 safe-top-bar flex-shrink-0" style={{ background: 'var(--c-espresso)' }}>
@@ -316,8 +341,17 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
       <WeekOverview weekPlan={weekPlan} />
       <MealCountSummary counts={mealCounts} />
 
-      {shoppingList.items.length > 0 && (
-        <div className="px-4 pt-2 content-narrow flex justify-end">
+      {hasList && (
+        <div className="px-4 pt-2 content-narrow flex justify-between items-center">
+          {!supermarktMode ? (
+            <button
+              onClick={handleClearList}
+              className="text-xs px-3 py-1.5 rounded-full font-medium active:opacity-70"
+              style={{ color: 'var(--c-terracotta)' }}
+            >
+              Lijst verwijderen
+            </button>
+          ) : <span />}
           <button
             onClick={handleCategorySort}
             disabled={categorizing}

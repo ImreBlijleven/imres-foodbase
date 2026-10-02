@@ -6,7 +6,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { WeekGrid } from './components/WeekGrid';
 import { ShoppingListScreen } from './components/ShoppingListScreen';
 import { RecipeLibraryScreen } from './components/RecipeLibraryScreen';
-import { BowlIcon, BackArrow } from './components/icons';
+import { BackArrow } from './components/icons';
 import { getWeekStart, addWeeks, getWeekNumber } from './utils';
 import { migrateLocalStorageToSupabase } from './lib/migrate';
 
@@ -167,12 +167,12 @@ export default function App() {
     return (
       <div className="flex items-center justify-center h-svh" style={{ background: 'var(--c-espresso)' }}>
         <div className="text-center">
-          <div
-            className="rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ width: 72, height: 72, background: 'var(--c-forest)' }}
-          >
-            <BowlIcon size={44} />
-          </div>
+          <img
+            src="/badge.png"
+            alt="Imre's Foodbase"
+            className="w-[120px] h-[120px] rounded-full object-cover mx-auto mb-4"
+            draggable={false}
+          />
           <p className="text-sm font-serif-display" style={{ color: 'var(--c-cream)', opacity: 0.6 }}>Laden…</p>
         </div>
       </div>
