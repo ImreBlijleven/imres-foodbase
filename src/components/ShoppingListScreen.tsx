@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { WeekPlan, Meal, Recipe, ShoppingItem } from '../types';
 import { MEAL_TYPE_CONFIG, SHOPPING_CATEGORIES } from '../types';
 import { DAY_NAMES, formatDate } from '../utils';
 import { useShoppingList } from '../hooks/useShoppingList';
-import { categorizeShoppingItems } from '../lib/gemini';
+import { categorizeShoppingItems, extractShoppingItemsFromImages } from '../lib/gemini';
+import { resizeAndCompress } from '../lib/image';
+import { generateId } from '../utils';
 import { WeekOverview } from './WeekOverview';
 import { RecipeLibraryScreen } from './RecipeLibraryScreen';
 import { IngredientPickerSheet } from './IngredientPickerSheet';
@@ -70,6 +72,13 @@ function MealCountSummary({ counts }: { counts: SlotBreakdown[] }) {
   );
 }
 
+const CameraIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+    <path d="M3 6.5A1.5 1.5 0 014.5 5h2l1.2-1.8h4.6L13.5 5h2A1.5 1.5 0 0117 6.5v8a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 14.5v-8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    <circle cx="10" cy="10.5" r="3" stroke="currentColor" strokeWidth="1.4" />
+  </svg>
+);
+
 interface Props {
   weekPlan: WeekPlan;
   userId: string;
@@ -114,6 +123,38 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
   const [mealCounts, setMealCounts] = useState<SlotBreakdown[]>([]);
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [categorizing, setCategorizing] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const photoRef = useRef<HTMLInputElement>(null);
+
+  async function handlePhotosChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    setPhotoLoading(true);
+    setPhotoError('');
+    try {
+      const images = await Promise.all(
+        files.map(async (file) => ({ base64: await resizeAndCompress(file), mimeType: 'image/jpeg' }))
+      );
+      const ingredients = await extractShoppingItemsFromImages(images);
+      if (ingredients.length === 0) {
+        setPhotoError('Geen boodschappen gevonden op de foto.');
+        return;
+      }
+      setPickedRecipe({
+        id: generateId(),
+        name: files.length > 1 ? `Van ${files.length} foto's` : 'Van foto',
+        ingredients,
+        source: 'screenshot',
+        createdAt: new Date().toISOString(),
+      });
+    } catch {
+      setPhotoError('Foto uitlezen mislukt. Probeer het opnieuw.');
+    } finally {
+      setPhotoLoading(false);
+    }
+  }
 
   async function handleCategorySort() {
     if (groupByCategory) { setGroupByCategory(false); return; }
@@ -421,13 +462,36 @@ export function ShoppingListScreen({ weekPlan, userId, onBack }: Props) {
               onChange={(e) => setNewItem(e.target.value)}
             />
             <button
+              type="button"
+              onClick={() => photoRef.current?.click()}
+              disabled={photoLoading}
+              aria-label="Boodschappen van foto toevoegen"
+              className="px-3 py-2 rounded-xl active:opacity-80 disabled:opacity-40 flex items-center justify-center"
+              style={{ border: '1px solid var(--c-forest)', color: 'var(--c-forest)' }}
+            >
+              {photoLoading ? '…' : <CameraIcon />}
+            </button>
+            <button
               type="submit"
               className="px-4 py-2 text-white rounded-xl font-medium active:opacity-80"
               style={{ background: 'var(--c-forest)' }}
             >
               +
             </button>
+            <input
+              ref={photoRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotosChange}
+            />
           </form>
+          {(photoLoading || photoError) && (
+            <p className="px-4 pb-1 text-xs content-narrow" style={{ color: 'var(--c-terracotta)' }}>
+              {photoLoading ? "Foto's uitlezen…" : photoError}
+            </p>
+          )}
           <div className="px-4 pb-4 safe-bottom-bar content-narrow">
             <button
               onClick={() => setShowRecipePicker(true)}

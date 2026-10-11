@@ -209,3 +209,32 @@ export async function categorizeShoppingItems(names: string[]): Promise<Record<s
     return {};
   }
 }
+
+const SHOPPING_PHOTO_PROMPT = `
+Op deze foto('s) staan boodschappen: bijvoorbeeld een (handgeschreven) boodschappenlijstje, een screenshot, een recept of producten.
+Haal alle boodschappen eruit die iemand zou moeten kopen. Staan dezelfde items op meerdere foto's, tel ze dan niet dubbel.
+Geef ze terug als één JSON-object, exact dit formaat:
+{ "items": [{ "name": "melk", "amount": 2, "unit": "liter" }, { "name": "appels", "amount": null, "unit": null }] }
+Regels:
+- Vertaal namen naar het Nederlands, kort en in kleine letters.
+- "amount" is een getal of null, "unit" is een eenheid (gram, ml, stuks, …) of null.
+- Geen items gevonden: { "items": [] }.
+- Geef alleen de JSON terug, geen uitleg, geen markdown.
+`;
+
+export async function extractShoppingItemsFromImages(images: { base64: string; mimeType: string }[]): Promise<Ingredient[]> {
+  if (images.length === 0) return [];
+  const raw = await callProxyImages(SHOPPING_PHOTO_PROMPT, images);
+  const cleaned = raw.replace(/```(?:json)?/g, '').trim();
+  const objMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objMatch) {
+    try {
+      return mapIngredients((JSON.parse(objMatch[0]) as { items?: unknown }).items);
+    } catch { /* fall through */ }
+  }
+  const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrMatch) {
+    try { return mapIngredients(JSON.parse(arrMatch[0])); } catch { /* ignore */ }
+  }
+  return [];
+}
